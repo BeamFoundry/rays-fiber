@@ -1,0 +1,133 @@
+rays:
+  fiber:
+    storage:
+      primary: memory # Specify which Storage engine to default to.
+      aerospike:
+        primary:
+          hosts: ["localhost:3000"]
+          namespace: "test"
+          setName: "fiber"
+          reset: false
+          expiration: 1h
+          schemaVersion: 1
+          schemaDescription: "Default Fiber storage schema"
+          forceSchemaUpdate: false
+          initialConnectionTimeout: 10s
+      couchbase:
+        primary:
+          host: couchbase://127.0.0.1:8091
+          username: "admin"
+          password: "123456"
+          bucket: fiber_storage
+          connectionTimeout: 3s
+          kvTimeout: 1s
+      etcd:
+        primary:
+          endpoints: ["localhost:2379"]
+          dialTimeout: 2s
+          username: ""
+          password: ""
+      memcache:
+        primary:
+          servers: localhost:11211
+          reset: false
+      memory:
+        primary:
+          gcInternal: 10s
+      mongodb:
+        primary:
+          connectionURI: ""
+          host: 127.0.0.1
+          port: 27017
+          username: ""
+          password: ""
+          database: "fiber"
+          collection: "fiber_storage"
+          reset: false
+      mysql:
+        primary:
+          connectionURI: ""
+          host: 127.0.0.1
+          port: 3306
+          username: ""
+          password: ""
+          database: fiber
+          table: fiber_storage
+          reset: false
+          gcInterval: 10s
+      postgres:
+        primary:
+          connectionURI: ""
+          host: 127.0.0.1
+          port: 5432
+          username: ""
+          password: ""
+          database: fiber
+          table: fiber_storage
+          sslMode: disable
+          reset: false
+          gcInterval: 10s
+      redis:
+        primary:
+          host: 127.0.0.1
+          port: 6379
+          username: ""
+          password: ""
+          database: 0
+          url: ""
+          addrs: []
+          masterName: ""
+          clientName: ""
+          sentinelUsername: ""
+          sentinelPassword: ""
+          reset: false
+          poolSize: 10
+          isClusterMode: false
+      rueidis:
+        primary:
+          username: ''
+          password: ''
+          clientName: ''
+          url: ''
+          selectDB: 0
+          initAddress: ["127.0.0.1:6379"]
+          cacheSizeEachConn: 134217728
+          ringScaleEachConn: 10
+          readBufferEachConn: 524288
+          writeBufferEachConn: 524288
+          blockingPoolSize: 1024
+          pipelineMultiplex: 2
+          disableRetry: false
+          disableCache: false
+          alwaysPipelining: true
+          disableAlwaysPipelining: false
+          reset: false
+          cacheTTL: 1m0s
+      sqlite3:
+        primary:
+          database: "file::memory:"
+          table: fiber_storage
+          reset: false
+          gcInterval: 10s
+          maxIdleConns: 100
+          maxOpenConns: 100
+          connMaxLifetime: 10s
+      valkey:
+        primary:
+          username: ""
+          password: ""
+          clientName: ""
+          url: ""
+          selectDB: 0
+          initAddress: ["127.0.0.1:6379"]
+          cacheSizeEachConn: 134217728
+          ringScaleEachConn: 10
+          readBufferEachConn: 524288
+          writeBufferEachConn: 524288
+          blockingPoolSize: 1024
+          pipelineMultiplex: 2
+          disableRetry: false
+          disableCache: false
+          alwaysPipelining: true
+          reset: false
+          cacheTTL: 1m

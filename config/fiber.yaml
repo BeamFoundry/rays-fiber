@@ -1,0 +1,41 @@
+rays:
+  fiber:
+    servers:
+      primary:
+        address: ":3000"
+        config:
+          bodyLimit: 4194304 # 4 * 1024 * 1024
+          compressedFileSuffixes: {gzip: ".fiber.gz", br: ".fiber.br", zstd: ".fiber.zst"}
+          concurrency: 262144 # 256 * 1024
+          readBufferSize: 4096
+          requestMethods: [GET,HEAD,POST,PUT,DELETE,CONNECT,OPTIONS,TRACE,PATCH]
+          writeBufferSize: 4096
+          appName: ""
+          disableDefaultContentType: false
+          disableDefaultDate: false
+          disableHeaderNormalizing: false
+          disableKeepalive: false
+          disablePreParseMultipartForm: false
+          enableIPValidation: false
+          enableSplittingOnParsers: false
+          getOnly: false
+          idleTimeout: 0
+          immutable: false
+          passLocalsToViews: false
+          readTimeout: 0
+          reduceMemoryUsage: false
+          proxyHeader: ""
+          serverHeader: ""
+          streamRequestBody: false
+          strictRouting: false
+          trustProxy: false
+          unescapePath: false
+          viewsLayout: ""
+          writeTimeout: 0
+        listener:
+          listenerNetwork: "tcp4"
+          shutdownTimeout: 10s
+          tlsMinVersion: 0x0303 # tls.VersionTLS12 # See crypto/tls
+          disableStartupMessage: false
+          enablePrefork: false
+          enablePrintRoutes: false

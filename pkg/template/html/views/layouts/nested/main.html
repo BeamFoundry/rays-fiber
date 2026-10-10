@@ -1,0 +1,10 @@
+{{ template "layouts/nested/base" .}}
+{{ define "nested" }}
+<head>
+  <title>Main</title>
+</head>
+
+<body>
+  {{block "content" .}}{{end}}
+</body>
+{{ end }}

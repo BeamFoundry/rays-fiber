@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>Please Log in</head>
+  <body>
+    <h1>Please Log in</h1>
+    {{- with .loginForm }}
+    <form action="{{ .Action }}">
+      <input type="hidden" name="_csrf" value="{{ $.Csrf }}">
+      <label for="{{ .Username }}">Username</label>
+      <input type="text" name="{{ .Username }}" required>
+      <label for="{{ .Password }}">Password</label>
+      <input type="password" name="{{ .Password }}" required>
+      <button type="submit">Login</button>
+    </form>
+    {{- end}}
+  </body>
+</html>

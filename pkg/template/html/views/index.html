@@ -1,0 +1,11 @@
+{{ define "content" }}
+{{ template "partials/header" .}}
+{{ printf "<h1>%s</h1>" .Title | toHTML }}
+{{ template "partials/footer" .}}
+{{ end }}
+{{ if .Template }}
+{{ include .Template .}}
+{{ else }}
+{{ block "content" .}}{{ end }}
+{{ end }}
+

@@ -1,0 +1,149 @@
+rays:
+  fiber:
+    servers:
+      primary:
+        basicauth:
+          charset: "UTF-8"
+          headerLimit: 8192
+          users: # dictionary of username/password
+            admin: null # Note: null passworded users will be ignored.
+          realm: "Restricted"
+        cache:
+          expiration: 5m
+          cacheHeader: "X-Cache"
+          disablelCacheControl: false
+          disableQueryKeys: false
+          disableValueRedaction: false
+          disableVaryHeaders: false
+          keyHeaders: ["accept", "accept-encoding", "accept-language"]
+          keyCookies: []
+          storage: null
+          storeResponseHeaders: false
+          maxBytes: 0
+          methods: [ "GET", "HEAD" ]
+        compress:
+          level: "default" # Case Unsensitive string. Posssible values : Default, Disabled, Speed, BestSpeed, Compression, BestCompression.
+        cors:
+          allowOrigins: ["*"]
+          allowMethods: ["GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"]
+          allowHeaders: []
+          allowCredentials: false
+          allowPrivateNetwork: false
+          disableValueRedaction: false
+          exposeHeaders: []
+          maxAge: 0
+        csrf:
+          cookieName: "csrf_"
+          cookieDomain: ""
+          cookiePath: ""
+          cookieSameSite: "Lax"
+          trustedOrigins: []
+          idleTimeout: 30m
+          cookieSecure: false
+          cookieHTTPOnly: false
+          cookieSessionOnly: false
+          disableValueRedaction: false
+          singleUseToken: false
+        encryptcookie:
+          key: null
+          except: []
+        envvar:
+          exportVars: {"HOME":null} # Using null as a map value will not register it. Use "" to have an empty value
+        etag:
+          weak: false
+        healthcheck:
+          format: "TEXT" # Possible values : TEXT, JSON, XML, MSGPACK, CBOR
+        hostauthorization:
+          allowedHosts: []
+        favicon:
+          file: ""
+          url: "/favicon.ico"
+          cacheControl: "public, max-age=31536000"
+        helmet:
+          xSSProtection: "0"
+          contentTypeNosniff: "nosniff"
+          xFrameOptions: "SAMEORIGIN"
+          contentSecurityPolicy: ""
+          referrerPolicy: "no-referrer"
+          permissionPolicy: ""
+          crossOriginEmbedderPolicy: "require-corp"
+          crossOriginOpenerPolicy: "same-origin"
+          crossOriginResourcePolicy: "same-origin"
+          originAgentCluster: "?1"
+          xDNSPrefetchControl: "off"
+          xDownloadOptions: "noopen"
+          xPermittedCrossDomain: "none"
+          hstsMaxAge: 0
+          hstsExcludeSubdomains: false
+          cspReportOnly: false
+          hstsPreloadEnabled: false
+        idempotency:
+          lifetime: 30m
+          keyHeader: "X-Idempotency-Key"
+          keepResponseHeaders: []
+          storage: null
+        keyauth:
+          realm: Restricted
+          challenge: ApiKey realm="Restricted"
+          errorCode: "" # Allowed values are `invalid_request`, `invalid_token`, or `insufficient_scope`.
+          errorDescription: ""
+          errorURI: ""
+          scope: ""
+        limiter:
+          handler: fixed
+          maxConn: 5 # Renamed from max
+          expiration: 1m
+          skipFailedRequests: false
+          skipSuccessfulRequests: false
+        logger:
+          format: DefaultFormat
+          timeFormat: 15:04:05
+          timeZone: Local
+          timeInterval: 500ms
+          disableColors: false
+          forceColors: false
+        paginate:
+          pageKey: "page"
+          limitKey: "limit"
+          sortKey: ""
+          defaultSort: "id"
+          cursorKey: "cursor"
+          offsetKey: "offset"
+          cursorParam: ""
+          allowedSorts: []
+          defaultPage: 1
+          defaultLimit: 10
+          maxLimit: 100
+        pprof:
+          prefix: ""
+        recover:
+          enableStackTrace: false
+        redirect:
+          rules:
+            /api/*: null # null values will be ignored.
+          statusCode: 302
+        requestid:
+          header: "X-Request-ID"
+        rewrite:
+          rules:
+            /api/*: null # null values will be ignored.
+        session:
+          storage: null
+          cookieDomain: ""
+          cookiePath: ""
+          cookieSameSite: "Lax"
+          idleTimeout: 30m
+          absoluteTimeout: 0s
+          cookieSecure: false
+          cookieHTTPOnly: false
+          cookieSessionOnly: false
+        static:
+          indexNames: ["index.html"]
+          cacheDuration: 10s
+          maxAge: 0
+          compress: false 
+          byteRange: false
+          browse: false
+          download: false
+        timeout:
+          timeout: 10s

@@ -1,0 +1,9 @@
+baseURL = 'https://rays.bfdy.dev/rays-fiber/'
+languageCode = 'en-us'
+title = 'BeamFoundry Rays Fiber'
+theme = 'github.com/alex-shpak/hugo-book'
+
+[params]
+  BookLogo = ''
+  BookSection = 'docs'
+  BookTheme= 'auto'
