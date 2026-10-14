@@ -1,6 +1,6 @@
 ---
 title: "Timeout"
-weight: 27
+weight: 28
 ---
 
 # Timeout Middleware

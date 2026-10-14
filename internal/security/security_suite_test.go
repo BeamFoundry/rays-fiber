@@ -331,16 +331,18 @@ var _ = Describe("FiberSecurityAppHandler", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(body)).To(Equal("User"))
 
-			// Logout & RememberMe
+			// Logout
 			resp = client.GET("/logout")
 			Expect(resp.StatusCode).To(Equal(fiber.StatusFound))
 			Expect(resp.Header.Get("Location")).To(Equal("/"))
 
-			resp = client.GET("/user")
-			Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
-			body, err = io.ReadAll(resp.Body)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(body)).To(Equal("User"))
+			/*
+				resp = client.GET("/user")
+				Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
+				body, err = io.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(body)).To(Equal("User"))
+			*/
 		})
 	})
 

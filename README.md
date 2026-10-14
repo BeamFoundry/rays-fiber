@@ -1,12 +1,14 @@
 # BeamFoundry Rays Fiber 🚀
 
+**This is an extract of the full documentation available at [rays.bdfy.dev](https://rays.bfdy.dev/rays-fiber/).**
+
 **Rays Fiber** seamlessly integrates the popular, Express-inspired [Go Fiber](https://gofiber.io/)
 web framework with the **Rays IoC Container**.
 
 By bringing Fiber into the IoC ecosystem, you can build blazing-fast web APIs using clean,
 object-oriented controllers, effortless dependency injection, and declarative configuration.
 
-## Introduction & Architecture
+## Introduction and Architecture
 
 While Go Fiber is incredibly fast and easy to use, large enterprise applications often struggle with state management,
 dependency injection, and scattered route definitions across dozens of files.
@@ -22,7 +24,7 @@ dependency injection, and scattered route definitions across dozens of files.
 3. **Declarative Routing:** Define endpoint HTTP methods and paths directly via struct tags, keeping your routing logic exactly
   where the handler code lives.
 
-## Quickstart & Setup
+## Quickstart and Setup
 
 Integrating Fiber into your Rays application takes only a few lines of code.
 
@@ -61,7 +63,7 @@ func main() {
 }
 ```
 
-## Controllers & Routing
+## Controllers and Routing
 
 Rays Fiber drops the traditional, scattered `app.Get("/path", handler)` routing in favor of highly cohesive, object-oriented controllers.
 
@@ -157,7 +159,7 @@ type AdminController struct {
 }
 ```
 
-## Global & Path Filters
+## Global and Path Filters
 
 While embedding middlewares in `FiberController` structs is great for endpoint-specific logic, sometimes you need to apply middlewares across your entire application or to broad URL prefixes.
 

@@ -141,9 +141,13 @@ rays:
           indexNames: ["index.html"]
           cacheDuration: 10s
           maxAge: 0
-          compress: false 
+          compress: false
           byteRange: false
           browse: false
           download: false
+        sse:
+          retry: 0
+          heartbeatInterval: 15s
+          disableHeartbeat: false
         timeout:
           timeout: 10s
