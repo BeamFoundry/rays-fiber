@@ -127,7 +127,7 @@ By implementing these on a Beam, you gain direct access to the underlying `fiber
 package configurations
 
 import (
-    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v3"
     . "github.com/BeamFoundry/rays-fiber/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/core"
 )

@@ -95,7 +95,7 @@ Here is a full example demonstrating dependency injection, a controller-level ro
 package controllers
 
 import (
-    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v3"
     . "github.com/BeamFoundry/rays-fiber/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/web"
@@ -271,8 +271,8 @@ To do this, create a component that implements the `CsrfSecurityConfig` or `Sess
 package configurations
 
 import (
-    "github.com/gofiber/fiber/v2/middleware/session"
-    "github.com/gofiber/fiber/v2/middleware/csrf"
+    "github.com/gofiber/fiber/v3/middleware/session"
+    "github.com/gofiber/fiber/v3/middleware/csrf"
     . "github.com/BeamFoundry/rays/pkg/core"
 )
 
@@ -420,7 +420,7 @@ By implementing these on a Beam, you gain direct access to the underlying `fiber
 package configurations
 
 import (
-    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v3"
     . "github.com/BeamFoundry/rays-fiber/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/core"
 )

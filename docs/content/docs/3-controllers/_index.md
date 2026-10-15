@@ -36,7 +36,7 @@ Here is a full example demonstrating dependency injection, a controller-level ro
 package controllers
 
 import (
-    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v3"
     . "github.com/BeamFoundry/rays-fiber/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/web"

@@ -30,7 +30,7 @@ Here is an example of a controller embedding the middleware and implementing the
 package controllers
 
 import (
-    "github.com/gofiber/fiber/v2/middleware/csrf"
+    "github.com/gofiber/fiber/v3/middleware/csrf"
     . "github.com/BeamFoundry/rays-fiber/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/core"
     . "github.com/BeamFoundry/rays/pkg/web"

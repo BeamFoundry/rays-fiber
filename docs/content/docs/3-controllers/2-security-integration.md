@@ -46,8 +46,8 @@ To do this, create a component that implements the `CsrfSecurityConfig` or `Sess
 package configurations
 
 import (
-    "github.com/gofiber/fiber/v2/middleware/session"
-    "github.com/gofiber/fiber/v2/middleware/csrf"
+    "github.com/gofiber/fiber/v3/middleware/session"
+    "github.com/gofiber/fiber/v3/middleware/csrf"
     . "github.com/BeamFoundry/rays/pkg/core"
 )
 
