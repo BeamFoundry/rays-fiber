@@ -11,7 +11,7 @@ require (
 	github.com/gofiber/template/v2 v2.1.3
 	github.com/gofiber/utils v1.2.0
 	github.com/onsi/ginkgo/v2 v2.33.1
-	github.com/onsi/gomega v1.40.0
+	github.com/onsi/gomega v1.44.0
 	github.com/valyala/fasthttp v1.75.0
 )
 
