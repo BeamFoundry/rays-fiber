@@ -10,7 +10,7 @@ require (
 	github.com/gofiber/storage/memory/v2 v2.1.2
 	github.com/gofiber/template/v2 v2.1.0
 	github.com/gofiber/utils v1.2.0
-	github.com/onsi/ginkgo/v2 v2.28.3
+	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.40.0
 	github.com/valyala/fasthttp v1.75.0
 )
