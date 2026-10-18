@@ -118,10 +118,10 @@ type HealthCheck struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *HealthCheck) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(HealthCheckNext); ok {
+	if next, ok := parent.(HealthCheckNext); ok {
 		this.cfg.Next = next.HealthCheckNext()
 	}
-	if probe, ok := (parent).(HealthCheckProbe); ok {
+	if probe, ok := parent.(HealthCheckProbe); ok {
 		this.cfg.Probe = probe.HealthCheckProbe()
 	}
 	return nil

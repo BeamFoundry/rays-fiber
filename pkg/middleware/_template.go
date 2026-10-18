@@ -103,10 +103,10 @@ func (this *Template) PostConstruct(parent any) Error {
 	if cfg.template.storage != nil {
 		this.cfg.Storage = this.storageProvider.Provide(*cfg.template.storage)
 	}
-	if next, ok := (parent).(TemplateNext); ok {
+	if next, ok := parent.(TemplateNext); ok {
 		this.cfg.Next = next.TemplateNext()
 	}
-	if config, ok := (parent).(TemplateConfig); ok {
+	if config, ok := parent.(TemplateConfig); ok {
 		config.TemplateConfig(this.cfg)
 	}
 	return nil

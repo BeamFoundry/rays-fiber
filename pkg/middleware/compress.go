@@ -101,10 +101,10 @@ type Compress struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Compress) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(CompressNext); ok {
+	if next, ok := parent.(CompressNext); ok {
 		this.cfg.Next = next.CompressNext()
 	}
-	if config, ok := (parent).(CompressConfig); ok {
+	if config, ok := parent.(CompressConfig); ok {
 		config.CompressConfig(this.cfg)
 	}
 	return nil

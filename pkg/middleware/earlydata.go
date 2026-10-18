@@ -99,19 +99,19 @@ type EarlyData struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *EarlyData) PostConstruct(parent any) Error {
 	this.cfg = new(earlydata.ConfigDefault)
-	if next, ok := (parent).(EarlyDataNext); ok {
+	if next, ok := parent.(EarlyDataNext); ok {
 		this.cfg.Next = next.EarlyDataNext()
 	}
-	if isEarlyData, ok := (parent).(EarlyDataIsEarlyData); ok {
+	if isEarlyData, ok := parent.(EarlyDataIsEarlyData); ok {
 		this.cfg.IsEarlyData = isEarlyData.EarlyDataIsEarlyData()
 	}
-	if allowEarlyData, ok := (parent).(EarlyDataAllowEarlyData); ok {
+	if allowEarlyData, ok := parent.(EarlyDataAllowEarlyData); ok {
 		this.cfg.AllowEarlyData = allowEarlyData.EarlyDataAllowEarlyData()
 	}
-	if earlyDataError, ok := (parent).(EarlyDataError); ok {
+	if earlyDataError, ok := parent.(EarlyDataError); ok {
 		this.cfg.Error = earlyDataError.EarlyDataError()
 	}
-	if config, ok := (parent).(EarlyDataConfig); ok {
+	if config, ok := parent.(EarlyDataConfig); ok {
 		config.EarlyDataConfig(this.cfg)
 	}
 	return nil

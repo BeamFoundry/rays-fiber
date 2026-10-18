@@ -95,10 +95,10 @@ type Etag struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Etag) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(EtagNext); ok {
+	if next, ok := parent.(EtagNext); ok {
 		this.cfg.Next = next.EtagNext()
 	}
-	if config, ok := (parent).(EtagConfig); ok {
+	if config, ok := parent.(EtagConfig); ok {
 		config.EtagConfig(this.cfg)
 	}
 	return nil

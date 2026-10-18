@@ -116,10 +116,10 @@ type Paginate struct {
 func (this *Paginate) PostConstruct(parent any) Error {
 	cfg := this.config.GetConfig(parent)
 	this.cfg = new(cfg.Config())
-	if next, ok := (parent).(PaginateNext); ok {
+	if next, ok := parent.(PaginateNext); ok {
 		this.cfg.Next = next.PaginateNext()
 	}
-	if config, ok := (parent).(PaginateConfig); ok {
+	if config, ok := parent.(PaginateConfig); ok {
 		config.PaginateConfig(this.cfg)
 	}
 	return nil

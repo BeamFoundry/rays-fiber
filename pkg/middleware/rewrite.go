@@ -103,10 +103,10 @@ type Rewrite struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Rewrite) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(RewriteNext); ok {
+	if next, ok := parent.(RewriteNext); ok {
 		this.cfg.Next = next.RewriteNext()
 	}
-	if config, ok := (parent).(RewriteConfig); ok {
+	if config, ok := parent.(RewriteConfig); ok {
 		config.RewriteConfig(this.cfg)
 	}
 	return nil

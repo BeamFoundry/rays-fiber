@@ -143,10 +143,10 @@ type Helmet struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Helmet) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(HelmetNext); ok {
+	if next, ok := parent.(HelmetNext); ok {
 		this.cfg.Next = next.HelmetNext()
 	}
-	if config, ok := (parent).(HelmetConfig); ok {
+	if config, ok := parent.(HelmetConfig); ok {
 		config.HelmetConfig(this.cfg)
 	}
 	return nil

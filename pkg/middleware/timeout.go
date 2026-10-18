@@ -138,15 +138,15 @@ func (this *Timeout) PostConstruct(parent any) Error {
 			}
 		}
 	}
-	if next, ok := (parent).(TimeoutNext); ok {
+	if next, ok := parent.(TimeoutNext); ok {
 		this.cfg.Next = next.TimeoutNext()
 	}
 
-	if errors, ok := (parent).(TimeoutErrors); ok {
+	if errors, ok := parent.(TimeoutErrors); ok {
 		this.cfg.Errors = errors.TimeoutErrors()
 	}
 
-	if config, ok := (parent).(TimeoutConfig); ok {
+	if config, ok := parent.(TimeoutConfig); ok {
 		config.TimeoutConfig(this.cfg)
 	}
 	return nil

@@ -11,7 +11,7 @@ import (
 	. "github.com/BeamFoundry/rays/pkg/testing"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/recover"
+	rec "github.com/gofiber/fiber/v3/middleware/recover"
 )
 
 type RecoverPathFilter struct {
@@ -35,7 +35,7 @@ func (r *RecoverPathFilter) RecoverStackTraceHandler() func(c fiber.Ctx, e any) 
 }
 
 // RecoverConfig implements [middleware.RecoverConfig].
-func (r *RecoverPathFilter) RecoverConfig(_ *recover.Config) {}
+func (r *RecoverPathFilter) RecoverConfig(_ *rec.Config) {}
 
 var _ RecoverNext = &RecoverPathFilter{}
 

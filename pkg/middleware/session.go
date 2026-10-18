@@ -199,19 +199,19 @@ func (this *Session) PostConstruct(parent any) Error {
 	if cfg.session.storage != nil {
 		this.cfg.Storage = this.storageProvider.Provide(*cfg.session.storage)
 	}
-	if next, ok := (parent).(SessionNext); ok {
+	if next, ok := parent.(SessionNext); ok {
 		this.cfg.Next = next.SessionNext()
 	}
-	if errorHandler, ok := (parent).(SessionErrorHandler); ok {
+	if errorHandler, ok := parent.(SessionErrorHandler); ok {
 		this.cfg.ErrorHandler = errorHandler.SessionErrorHandler()
 	}
-	if keyGenerator, ok := (parent).(SessionKeyGenerator); ok {
+	if keyGenerator, ok := parent.(SessionKeyGenerator); ok {
 		this.cfg.KeyGenerator = keyGenerator.SessionKeyGenerator()
 	}
-	if extractor, ok := (parent).(SessionExtractor); ok {
+	if extractor, ok := parent.(SessionExtractor); ok {
 		this.cfg.Extractor = extractor.SessionExtractor()
 	}
-	if config, ok := (parent).(SessionConfig); ok {
+	if config, ok := parent.(SessionConfig); ok {
 		config.SessionConfig(this.cfg)
 	}
 	this.handler, this.store = session.NewWithStore(*this.cfg)

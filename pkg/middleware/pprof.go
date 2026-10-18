@@ -97,10 +97,10 @@ type Pprof struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Pprof) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(PprofNext); ok {
+	if next, ok := parent.(PprofNext); ok {
 		this.cfg.Next = next.PprofNext()
 	}
-	if config, ok := (parent).(PprofConfig); ok {
+	if config, ok := parent.(PprofConfig); ok {
 		config.PprofConfig(this.cfg)
 	}
 	return nil

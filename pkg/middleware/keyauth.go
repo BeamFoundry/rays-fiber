@@ -162,22 +162,22 @@ type KeyAuth struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *KeyAuth) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(KeyAuthNext); ok {
+	if next, ok := parent.(KeyAuthNext); ok {
 		this.cfg.Next = next.KeyAuthNext()
 	}
-	if successHandler, ok := (parent).(KeyAuthSuccessHandler); ok {
+	if successHandler, ok := parent.(KeyAuthSuccessHandler); ok {
 		this.cfg.SuccessHandler = successHandler.KeyAuthSuccessHandler()
 	}
-	if errorHandler, ok := (parent).(KeyAuthErrorHandler); ok {
+	if errorHandler, ok := parent.(KeyAuthErrorHandler); ok {
 		this.cfg.ErrorHandler = errorHandler.KeyAuthErrorHandler()
 	}
-	if validator, ok := (parent).(KeyAuthValidator); ok {
+	if validator, ok := parent.(KeyAuthValidator); ok {
 		this.cfg.Validator = validator.KeyAuthValidator()
 	}
-	if extractor, ok := (parent).(KeyAuthExtractor); ok {
+	if extractor, ok := parent.(KeyAuthExtractor); ok {
 		this.cfg.Extractor = extractor.KeyAuthExtractor()
 	}
-	if config, ok := (parent).(KeyAuthConfig); ok {
+	if config, ok := parent.(KeyAuthConfig); ok {
 		config.KeyAuthConfig(this.cfg)
 	}
 	return nil

@@ -117,16 +117,16 @@ type HostAuthorization struct {
 
 func (this *HostAuthorization) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(HostAuthorizationNext); ok {
+	if next, ok := parent.(HostAuthorizationNext); ok {
 		this.cfg.Next = next.HostAuthorizationNext()
 	}
-	if allowedHosts, ok := (parent).(HostAuthorizationAllowedHostsFunc); ok {
+	if allowedHosts, ok := parent.(HostAuthorizationAllowedHostsFunc); ok {
 		this.cfg.AllowedHostsFunc = allowedHosts.HostAuthorizationAllowedHostsFunc()
 	}
-	if errorHandler, ok := (parent).(HostAuthorizationErrorHandler); ok {
+	if errorHandler, ok := parent.(HostAuthorizationErrorHandler); ok {
 		this.cfg.ErrorHandler = errorHandler.HostAuthorizationErrorHandler()
 	}
-	if config, ok := (parent).(HostAuthorizationConfig); ok {
+	if config, ok := parent.(HostAuthorizationConfig); ok {
 		config.HostAuthorizationConfig(this.cfg)
 	}
 	return nil

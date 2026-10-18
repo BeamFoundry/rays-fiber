@@ -156,7 +156,7 @@ func (this *Static) PostConstruct(parent any) Error {
 	this.staticFS = nil
 
 	// TODO: Remove tag
-	if staticFS, ok := (parent).(StaticFS); ok {
+	if staticFS, ok := parent.(StaticFS); ok {
 		this.staticFS = staticFS.StaticFS()
 	} else if field, ok := reflectType.FieldByName("Static"); ok {
 		if dir, ok := field.Tag.Lookup("Dir"); ok {
@@ -168,16 +168,16 @@ func (this *Static) PostConstruct(parent any) Error {
 	if this.staticFS != nil {
 		this.cfg.FS = this.staticFS
 	}
-	if next, ok := (parent).(StaticNext); ok {
+	if next, ok := parent.(StaticNext); ok {
 		this.cfg.Next = next.StaticNext()
 	}
-	if modifyResponse, ok := (parent).(StaticModifyResponse); ok {
+	if modifyResponse, ok := parent.(StaticModifyResponse); ok {
 		this.cfg.ModifyResponse = modifyResponse.StaticModifyResponse()
 	}
-	if notFoundHandler, ok := (parent).(StaticNotFoundHandler); ok {
+	if notFoundHandler, ok := parent.(StaticNotFoundHandler); ok {
 		this.cfg.NotFoundHandler = notFoundHandler.StaticNotFoundHandler()
 	}
-	if config, ok := (parent).(StaticConfig); ok {
+	if config, ok := parent.(StaticConfig); ok {
 		config.StaticConfig(this.cfg)
 	}
 	return nil
