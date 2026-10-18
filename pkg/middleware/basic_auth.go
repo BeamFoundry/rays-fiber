@@ -159,19 +159,19 @@ var _ InnerBeamPostConstruct = &BasicAuth{}
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *BasicAuth) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(BasicAuthNext); ok {
+	if next, ok := parent.(BasicAuthNext); ok {
 		this.cfg.Next = next.BasicAuthNext()
 	}
-	if authorizer, ok := (parent).(BasicAuthAuthorizer); ok {
+	if authorizer, ok := parent.(BasicAuthAuthorizer); ok {
 		this.cfg.Authorizer = authorizer.BasicAuthAuthorizer()
 	}
-	if unauthorized, ok := (parent).(BasicAuthUnauthorized); ok {
+	if unauthorized, ok := parent.(BasicAuthUnauthorized); ok {
 		this.cfg.Unauthorized = unauthorized.BasicAuthUnauthorized()
 	}
-	if badrequest, ok := (parent).(BasicAuthBadRequest); ok {
+	if badrequest, ok := parent.(BasicAuthBadRequest); ok {
 		this.cfg.BadRequest = badrequest.BasicAuthBadRequest()
 	}
-	if config, ok := (parent).(BasicAuthConfig); ok {
+	if config, ok := parent.(BasicAuthConfig); ok {
 		config.BasicAuthConfig(this.cfg)
 	}
 	return nil

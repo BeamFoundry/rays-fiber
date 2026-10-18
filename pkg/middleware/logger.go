@@ -189,25 +189,25 @@ type Logger struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Logger) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(LoggerNext); ok {
+	if next, ok := parent.(LoggerNext); ok {
 		this.cfg.Next = next.LoggerNext()
 	}
-	if skip, ok := (parent).(LoggerSkip); ok {
+	if skip, ok := parent.(LoggerSkip); ok {
 		this.cfg.Skip = skip.LoggerSkip()
 	}
-	if done, ok := (parent).(LoggerDone); ok {
+	if done, ok := parent.(LoggerDone); ok {
 		this.cfg.Done = done.LoggerDone()
 	}
-	if customTags, ok := (parent).(LoggerCustomTags); ok {
+	if customTags, ok := parent.(LoggerCustomTags); ok {
 		this.cfg.CustomTags = customTags.LoggerCustomTags()
 	}
-	if beforeHandlerFunc, ok := (parent).(LoggerBeforeHandlerFunc); ok {
+	if beforeHandlerFunc, ok := parent.(LoggerBeforeHandlerFunc); ok {
 		this.cfg.BeforeHandlerFunc = beforeHandlerFunc.LoggerBeforeHandlerFunc()
 	}
-	if loggerFunc, ok := (parent).(LoggerLoggerFunc); ok {
+	if loggerFunc, ok := parent.(LoggerLoggerFunc); ok {
 		this.cfg.LoggerFunc = loggerFunc.LoggerLoggerFunc()
 	}
-	if config, ok := (parent).(LoggerConfig); ok {
+	if config, ok := parent.(LoggerConfig); ok {
 		config.LoggerConfig(this.cfg)
 	}
 	return nil

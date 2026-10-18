@@ -129,13 +129,13 @@ type Cors struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Cors) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(CorsNext); ok {
+	if next, ok := parent.(CorsNext); ok {
 		this.cfg.Next = next.CorsNext()
 	}
-	if allowOriginsFunc, ok := (parent).(CorsAllowOriginsFunc); ok {
+	if allowOriginsFunc, ok := parent.(CorsAllowOriginsFunc); ok {
 		this.cfg.AllowOriginsFunc = allowOriginsFunc.CorsAllowOriginsFunc()
 	}
-	if config, ok := (parent).(CorsConfig); ok {
+	if config, ok := parent.(CorsConfig); ok {
 		config.CorsConfig(this.cfg)
 	}
 	return nil

@@ -7,7 +7,7 @@ import (
 	. "github.com/BeamFoundry/rays-fiber/pkg/middleware/internal"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/recover"
+	rec "github.com/gofiber/fiber/v3/middleware/recover"
 )
 
 // RecoverNext is an interface a [github.com/BeamFoundry/rays-fiber/pkg/core.FiberController]
@@ -51,7 +51,7 @@ type RecoverStackTraceHandler interface {
 //
 // [recover]: https://docs.gofiber.io/middleware/recover/#config
 type RecoverConfig interface {
-	RecoverConfig(config *recover.Config)
+	RecoverConfig(config *rec.Config)
 }
 
 type recoverConfigurationProperties struct {
@@ -64,8 +64,8 @@ type recoverConfig struct {
 
 var _, _ = any(&FiberMwConfig[recoverConfig]{}).(Stereotype)
 
-func (this *recoverConfig) Config() recover.Config {
-	config := recover.ConfigDefault
+func (this *recoverConfig) Config() rec.Config {
+	config := rec.ConfigDefault
 	config.EnableStackTrace = this.recovering.enableStackTrace
 
 	return config
@@ -111,22 +111,22 @@ func (this *recoverConfig) Config() recover.Config {
 // [recover]: https://docs.gofiber.io/middleware/recover/#config
 type Recover struct {
 	config *FiberMwConfig[recoverConfig] `@:"Inject"`
-	cfg    *recover.Config
+	cfg    *rec.Config
 }
 
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Recover) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(RecoverNext); ok {
+	if next, ok := parent.(RecoverNext); ok {
 		this.cfg.Next = next.RecoverNext()
 	}
-	if panicHandler, ok := (parent).(RecoverPanicHandler); ok {
+	if panicHandler, ok := parent.(RecoverPanicHandler); ok {
 		this.cfg.PanicHandler = panicHandler.RecoverPanicHandler()
 	}
-	if stackTraceHandler, ok := (parent).(RecoverStackTraceHandler); ok {
+	if stackTraceHandler, ok := parent.(RecoverStackTraceHandler); ok {
 		this.cfg.StackTraceHandler = stackTraceHandler.RecoverStackTraceHandler()
 	}
-	if config, ok := (parent).(RecoverConfig); ok {
+	if config, ok := parent.(RecoverConfig); ok {
 		config.RecoverConfig(this.cfg)
 	}
 	return nil
@@ -134,5 +134,5 @@ func (this *Recover) PostConstruct(parent any) Error {
 
 // Handler() implements [github.com/BeamFoundry/rays-fiber/pkg/core.FiberHandler]
 func (this *Recover) Handler() fiber.Handler {
-	return recover.New(*this.cfg)
+	return rec.New(*this.cfg)
 }

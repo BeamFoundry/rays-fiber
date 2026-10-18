@@ -126,16 +126,16 @@ type EncryptCookie struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *EncryptCookie) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(EncryptCookieNext); ok {
+	if next, ok := parent.(EncryptCookieNext); ok {
 		this.cfg.Next = next.EncryptCookieNext()
 	}
-	if encryptor, ok := (parent).(EncryptCookieEncryptor); ok {
+	if encryptor, ok := parent.(EncryptCookieEncryptor); ok {
 		this.cfg.Encryptor = encryptor.EncryptCookieEncryptor()
 	}
-	if decryptor, ok := (parent).(EncryptCookieDecryptor); ok {
+	if decryptor, ok := parent.(EncryptCookieDecryptor); ok {
 		this.cfg.Decryptor = decryptor.EncryptCookieDecryptor()
 	}
-	if config, ok := (parent).(EncryptCookieConfig); ok {
+	if config, ok := parent.(EncryptCookieConfig); ok {
 		config.EncryptCookieConfig(this.cfg)
 	}
 	return nil

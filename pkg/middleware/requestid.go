@@ -107,13 +107,13 @@ type RequestID struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *RequestID) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(RequestIDNext); ok {
+	if next, ok := parent.(RequestIDNext); ok {
 		this.cfg.Next = next.RequestIDNext()
 	}
-	if generator, ok := (parent).(RequestIDGenerator); ok {
+	if generator, ok := parent.(RequestIDGenerator); ok {
 		this.cfg.Generator = generator.RequestIDGenerator()
 	}
-	if config, ok := (parent).(RequestIDConfig); ok {
+	if config, ok := parent.(RequestIDConfig); ok {
 		config.RequestIDConfig(this.cfg)
 	}
 	return nil

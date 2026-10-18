@@ -86,7 +86,7 @@ type EnvVar struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *EnvVar) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if config, ok := (parent).(EnvVarConfig); ok {
+	if config, ok := parent.(EnvVarConfig); ok {
 		config.EnvVarConfig(this.cfg)
 	}
 	return nil

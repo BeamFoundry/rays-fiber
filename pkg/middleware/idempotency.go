@@ -137,16 +137,16 @@ func (this *Idempotency) PostConstruct(parent any) Error {
 	if cfg.idempotency.storage != nil {
 		this.cfg.Storage = this.storageProvider.Provide(*cfg.idempotency.storage)
 	}
-	if next, ok := (parent).(IdempotencyNext); ok {
+	if next, ok := parent.(IdempotencyNext); ok {
 		this.cfg.Next = next.IdempotencyNext()
 	}
-	if keyHeaderValidate, ok := (parent).(IdempotencyKeyHeaderValidate); ok {
+	if keyHeaderValidate, ok := parent.(IdempotencyKeyHeaderValidate); ok {
 		this.cfg.KeyHeaderValidate = keyHeaderValidate.IdempotencyKeyHeaderValidate()
 	}
-	if locker, ok := (parent).(IdempotencyLocker); ok {
+	if locker, ok := parent.(IdempotencyLocker); ok {
 		this.cfg.Lock = locker.IdempotencyLocker()
 	}
-	if config, ok := (parent).(IdempotencyConfig); ok {
+	if config, ok := parent.(IdempotencyConfig); ok {
 		config.IdempotencyConfig(this.cfg)
 	}
 	return nil

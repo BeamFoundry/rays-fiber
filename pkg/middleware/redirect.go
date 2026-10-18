@@ -105,10 +105,10 @@ type Redirect struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Redirect) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(RedirectNext); ok {
+	if next, ok := parent.(RedirectNext); ok {
 		this.cfg.Next = next.RedirectNext()
 	}
-	if config, ok := (parent).(RedirectConfig); ok {
+	if config, ok := parent.(RedirectConfig); ok {
 		config.RedirectConfig(this.cfg)
 	}
 	return nil

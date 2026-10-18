@@ -167,19 +167,19 @@ func (this *Cache) PostConstruct(parent any) Error {
 	if cfg.cache.storage != nil {
 		this.cfg.Storage = this.storageProvider.Provide(*cfg.cache.storage)
 	}
-	if next, ok := (parent).(CacheNext); ok {
+	if next, ok := parent.(CacheNext); ok {
 		this.cfg.Next = next.CacheNext()
 	}
-	if invalidator, ok := (parent).(CacheInvalidator); ok {
+	if invalidator, ok := parent.(CacheInvalidator); ok {
 		this.cfg.CacheInvalidator = invalidator.CacheInvalidator()
 	}
-	if keyGenerator, ok := (parent).(CacheKeyGenerator); ok {
+	if keyGenerator, ok := parent.(CacheKeyGenerator); ok {
 		this.cfg.KeyGenerator = keyGenerator.CacheKeyGenerator()
 	}
-	if expirationGenerator, ok := (parent).(CacheExpirationGenerator); ok {
+	if expirationGenerator, ok := parent.(CacheExpirationGenerator); ok {
 		this.cfg.ExpirationGenerator = expirationGenerator.CacheExpirationGenerator()
 	}
-	if config, ok := (parent).(CacheConfig); ok {
+	if config, ok := parent.(CacheConfig); ok {
 		config.CacheConfig(this.cfg)
 	}
 	return nil

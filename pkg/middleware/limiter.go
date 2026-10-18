@@ -163,19 +163,19 @@ func (this *Limiter) PostConstruct(parent any) Error {
 	if cfg.limiter.storage != nil {
 		this.cfg.Storage = this.storageProvider.Provide(*cfg.limiter.storage)
 	}
-	if next, ok := (parent).(LimiterNext); ok {
+	if next, ok := parent.(LimiterNext); ok {
 		this.cfg.Next = next.LimiterNext()
 	}
-	if maxFunc, ok := (parent).(LimiterMaxFunc); ok {
+	if maxFunc, ok := parent.(LimiterMaxFunc); ok {
 		this.cfg.MaxFunc = maxFunc.LimiterMaxFunc()
 	}
-	if keyGenerator, ok := (parent).(LimiterKeyGenerator); ok {
+	if keyGenerator, ok := parent.(LimiterKeyGenerator); ok {
 		this.cfg.KeyGenerator = keyGenerator.LimiterKeyGenerator()
 	}
-	if limitReached, ok := (parent).(LimiterLimitReached); ok {
+	if limitReached, ok := parent.(LimiterLimitReached); ok {
 		this.cfg.LimitReached = limitReached.LimiterLimitReached()
 	}
-	if config, ok := (parent).(LimiterConfig); ok {
+	if config, ok := parent.(LimiterConfig); ok {
 		config.LimiterConfig(this.cfg)
 	}
 	return nil

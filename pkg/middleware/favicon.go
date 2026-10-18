@@ -118,10 +118,10 @@ type Favicon struct {
 // PostConstruct() implements [github.com/BeamFoundry/rays/pkg/core.InnerBeamPostConstruct]
 func (this *Favicon) PostConstruct(parent any) Error {
 	this.cfg = new(this.config.GetConfig(parent).Config())
-	if next, ok := (parent).(FaviconNext); ok {
+	if next, ok := parent.(FaviconNext); ok {
 		this.cfg.Next = next.FaviconNext()
 	}
-	if fileSystem, ok := (parent).(FaviconFileSystem); ok {
+	if fileSystem, ok := parent.(FaviconFileSystem); ok {
 		this.cfg.FileSystem = fileSystem.FaviconFileSystem()
 	}
 	return nil

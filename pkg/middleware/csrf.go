@@ -192,27 +192,27 @@ func (this *Csrf) PostConstruct(parent any) Error {
 	if cfg.csrf.storage != nil {
 		this.cfg.Storage = this.storageProvider.Provide(*cfg.csrf.storage)
 	}
-	if next, ok := (parent).(CsrfNext); ok {
+	if next, ok := parent.(CsrfNext); ok {
 		this.cfg.Next = next.CsrfNext()
 	}
 	// SessionStore is implemented by [Session]
-	if session, ok := (parent).(SessionStore); ok {
+	if session, ok := parent.(SessionStore); ok {
 		store := session.SessionStore()
 		if store == nil {
 			return NewError("IllegalArgumentException", "CSRF SessionStore is nil. Have you initialized Session before Csrf ?")
 		}
 		this.cfg.Session = store
 	}
-	if extractor, ok := (parent).(CsrfExtractor); ok {
+	if extractor, ok := parent.(CsrfExtractor); ok {
 		this.cfg.Extractor = extractor.CsrfExtractor()
 	}
-	if errorHandler, ok := (parent).(CsrfErrorHandler); ok {
+	if errorHandler, ok := parent.(CsrfErrorHandler); ok {
 		this.cfg.ErrorHandler = errorHandler.CsrfErrorHandler()
 	}
-	if keyGenerator, ok := (parent).(CsrfKeyGenerator); ok {
+	if keyGenerator, ok := parent.(CsrfKeyGenerator); ok {
 		this.cfg.KeyGenerator = keyGenerator.CsrfKeyGenerator()
 	}
-	if config, ok := (parent).(CsrfConfig); ok {
+	if config, ok := parent.(CsrfConfig); ok {
 		config.CsrfConfig(this.cfg)
 	}
 	return nil

@@ -117,13 +117,13 @@ type SSE struct {
 func (this *SSE) PostConstruct(parent any) Error {
 	cfg := this.config.GetConfig(parent)
 	this.cfg = new(cfg.Config())
-	if handler, ok := (parent).(SSEHandler); ok {
+	if handler, ok := parent.(SSEHandler); ok {
 		this.cfg.Handler = handler.SSEHandler()
 	}
-	if onClose, ok := (parent).(SSEOnClose); ok {
+	if onClose, ok := parent.(SSEOnClose); ok {
 		this.cfg.OnClose = onClose.SSEOnClose()
 	}
-	if config, ok := (parent).(SSEConfig); ok {
+	if config, ok := parent.(SSEConfig); ok {
 		config.SSEConfig(this.cfg)
 	}
 	return nil

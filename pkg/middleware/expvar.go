@@ -65,7 +65,7 @@ type ExpVar struct {
 func (this *ExpVar) PostConstruct(parent any) Error {
 	return Try(func() {
 		this.cfg = new(expvar.ConfigDefault)
-		if next, ok := (parent).(ExpVarNext); ok {
+		if next, ok := parent.(ExpVarNext); ok {
 			this.cfg.Next = next.ExpVarNext()
 		}
 	})
