@@ -120,13 +120,13 @@ rays:
           enableStackTrace: false
         redirect:
           rules:
-            /api/*: null # null values will be ignored.
+            - /api/*: null # null values will be ignored.
           statusCode: 302
         requestid:
           header: "X-Request-ID"
         rewrite:
           rules:
-            /api/*: null # null values will be ignored.
+            - /api/*: null # null values will be ignored.
         session:
           storage: null
           cookieDomain: ""

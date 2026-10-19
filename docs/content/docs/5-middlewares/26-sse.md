@@ -1,6 +1,6 @@
 ---
 title: "SSE"
-weight: 27
+weight: 26
 ---
 
 # SSE Middleware

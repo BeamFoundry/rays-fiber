@@ -7,9 +7,9 @@ rays:
           bodyLimit: 4194304 # 4 * 1024 * 1024
           compressedFileSuffixes: {gzip: ".fiber.gz", br: ".fiber.br", zstd: ".fiber.zst"}
           concurrency: 262144 # 256 * 1024
-          readBufferSize: 4096
+          readBufferSize: 8192
           requestMethods: [GET,HEAD,POST,PUT,DELETE,CONNECT,OPTIONS,TRACE,PATCH]
-          writeBufferSize: 4096
+          writeBufferSize: 8192
           appName: ""
           disableDefaultContentType: false
           disableDefaultDate: false
@@ -39,3 +39,4 @@ rays:
           disableStartupMessage: false
           enablePrefork: false
           enablePrintRoutes: false
+          preforkShutdownGracePeriod: 5s

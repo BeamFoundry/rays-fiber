@@ -1,6 +1,6 @@
 ---
 title: "Static"
-weight: 26
+weight: 27
 ---
 
 # Static Middleware
