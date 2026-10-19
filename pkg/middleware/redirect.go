@@ -33,7 +33,7 @@ type RedirectConfig interface {
 }
 
 type redirectConfigurationProperties struct {
-	rules      map[string]*string
+	rules      []map[string]*string
 	statusCode int
 }
 
@@ -46,13 +46,14 @@ var _, _ = any(&FiberMwConfig[redirectConfig]{}).(Stereotype)
 func (this *redirectConfig) Config() redirect.Config {
 	config := redirect.ConfigDefault
 
-	rules := map[string]string{}
-	for k, v := range this.redirect.rules {
-		if v != nil {
-			rules[k] = *v
+	ruleList := []redirect.Rule{}
+	for _, rules := range this.redirect.rules {
+		for k, v := range rules {
+			rule := redirect.Rule{From: k, To: *v}
+			ruleList = append(ruleList, rule)
 		}
 	}
-	config.Rules = rules
+	config.RuleList = ruleList
 	config.StatusCode = this.redirect.statusCode
 
 	return config

@@ -33,7 +33,7 @@ type RewriteConfig interface {
 }
 
 type rewriteConfigurationProperties struct {
-	rules map[string]*string
+	rules []map[string]*string
 }
 
 type rewriteConfig struct {
@@ -46,13 +46,14 @@ var _, _ = any(&FiberMwConfig[rewriteConfig]{}).(Stereotype)
 func (this *rewriteConfig) Config() rewrite.Config {
 	config := rewrite.Config{}
 
-	rules := map[string]string{}
-	for k, v := range this.rewrite.rules {
-		if v != nil {
-			rules[k] = *v
+	ruleList := []rewrite.Rule{}
+	for _, rules := range this.rewrite.rules {
+		for k, v := range rules {
+			rule := rewrite.Rule{From: k, To: *v}
+			ruleList = append(ruleList, rule)
 		}
 	}
-	config.Rules = rules
+	config.RuleList = ruleList
 
 	return config
 }
