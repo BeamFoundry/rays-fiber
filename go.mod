@@ -8,7 +8,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/gofiber/fiber/v3 v3.6.1
 	github.com/gofiber/storage/memory/v2 v2.1.2
-	github.com/gofiber/template/v2 v2.1.3
+	github.com/gofiber/template/v2 v2.1.4
 	github.com/gofiber/utils v1.2.0
 	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
