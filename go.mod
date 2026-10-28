@@ -3,7 +3,7 @@ module github.com/BeamFoundry/rays-fiber
 go 1.27
 
 require (
-	github.com/BeamFoundry/rays v0.2.1
+	github.com/BeamFoundry/rays v0.2.2
 	github.com/BeamFoundry/rays-web-security v0.2.0
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/gofiber/fiber/v3 v3.6.1
