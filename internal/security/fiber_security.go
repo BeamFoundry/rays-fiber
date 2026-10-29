@@ -1,6 +1,7 @@
 package security
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -92,6 +93,8 @@ type FiberSecurityHandler struct {
 
 var _ SecurityHandler = &FiberSecurityHandler{}
 
+var _ TLSConnectionHandler = &FiberSecurityHandler{}
+
 // FiberSecurityHandler constructor. It needs a fiber.Ctx.
 func (this FiberSecurityHandler) New(ctx fiber.Ctx) *FiberSecurityHandler {
 	this.ctx = ctx
@@ -100,6 +103,17 @@ func (this FiberSecurityHandler) New(ctx fiber.Ctx) *FiberSecurityHandler {
 	req, _ := adaptor.ConvertRequest(ctx, true)
 	this.req = req
 	return &this
+}
+
+// TLSConnectionState implements [core.TLSConnectionHandler].
+func (this *FiberSecurityHandler) TLSConnectionState() *tls.ConnectionState {
+	if this.req != nil && this.req.TLS != nil {
+		return this.req.TLS
+	}
+	if this.ctx.RequestCtx() != nil {
+		return this.ctx.RequestCtx().TLSConnectionState()
+	}
+	return nil
 }
 
 // Cookie implements rays-web-security/core.HTTPHandler.Cookie(string)
