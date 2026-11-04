@@ -12,7 +12,7 @@ require (
 	github.com/gofiber/utils v1.2.0
 	github.com/onsi/ginkgo/v2 v2.33.1
 	github.com/onsi/gomega v1.44.0
-	github.com/valyala/fasthttp v1.76.0
+	github.com/valyala/fasthttp v1.77.0
 )
 
 require (
