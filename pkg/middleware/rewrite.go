@@ -3,6 +3,7 @@ package middleware
 import (
 	. "github.com/BeamFoundry/rays/pkg/core"
 	. "github.com/BeamFoundry/rays/pkg/lang"
+	. "github.com/BeamFoundry/rays/pkg/util"
 
 	. "github.com/BeamFoundry/rays-fiber/pkg/middleware/internal"
 
@@ -33,7 +34,7 @@ type RewriteConfig interface {
 }
 
 type rewriteConfigurationProperties struct {
-	rules []map[string]*string
+	rules []MapEntry[string, *string]
 }
 
 type rewriteConfig struct {
@@ -47,10 +48,9 @@ func (this *rewriteConfig) Config() rewrite.Config {
 	config := rewrite.Config{}
 
 	ruleList := []rewrite.Rule{}
-	for _, rules := range this.rewrite.rules {
-		for k, v := range rules {
-			rule := rewrite.Rule{From: k, To: *v}
-			ruleList = append(ruleList, rule)
+	for _, rule := range this.rewrite.rules {
+		if rule.Value() != nil {
+			ruleList = append(ruleList, rewrite.Rule{From: rule.Key(), To: *rule.Value()})
 		}
 	}
 	config.RuleList = ruleList
@@ -92,8 +92,8 @@ func (this *rewriteConfig) Config() rewrite.Config {
 //			servers:
 //				primary:
 //					rewrite:
-//	          rules:
-//	            /api/*: null # null values will be ignored.
+//						rules:
+//							- /api/*: null # null values will be ignored.
 //
 // [rewrite]: https://docs.gofiber.io/middleware/rewrite/#config
 type Rewrite struct {

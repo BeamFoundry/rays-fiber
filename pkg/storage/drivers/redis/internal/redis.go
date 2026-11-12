@@ -5,6 +5,7 @@ import (
 	. "github.com/BeamFoundry/rays/pkg/lang"
 
 	. "github.com/BeamFoundry/rays-fiber/pkg/core"
+	"github.com/BeamFoundry/rays-web-security/pkg/certs"
 
 	"github.com/gofiber/storage/redis/v3"
 
@@ -15,25 +16,29 @@ type RedisConfigOverride interface {
 	RedisConfigOverride(instance string, config *redis.Config)
 }
 
+type RedisClientTLSProvider interface {
+	RedisClientTLSProvider(instance string) certs.ClientTLSProvider
+}
+
 type redisConfig struct {
-	host                string
-	port                int
+	sentinelUsername    string
+	masterName          string
 	username            string
 	password            string
-	database            int
-	url                 string
-	addrs               []string
-	masterName          string
 	clientName          string
-	sentinelUsername    string
+	url                 string
+	host                string
 	sentinelPassword    string
-	reset               bool
+	addrs               []string
+	port                int
+	database            int
 	poolSize            int
+	reset               bool
 	isClusterMode       bool
 	skipConnectionCheck bool
 }
 
-func (this redisConfig) Config() redis.Config {
+func (this *redisConfig) Config() redis.Config {
 	config := redis.ConfigDefault
 	config.Host = this.host
 	config.Port = this.port
@@ -70,12 +75,21 @@ func (this *RedisConfigurationProperties) Config(name string) redis.Config {
 var _, _ = any(&RedisConfigurationProperties{}).(Stereotype)
 
 type redisStorageProvider struct {
-	cfg      *RedisConfigurationProperties
-	override Optional[RedisConfigOverride]
+	cfg         *RedisConfigurationProperties
+	override    Optional[RedisConfigOverride]
+	tlsProvider Optional[RedisClientTLSProvider]
 }
 
 func (this *redisStorageProvider) Storage(name string) fiber.Storage {
 	cfg := this.cfg.Config(name)
+	if tlsProvider, ok := this.tlsProvider.Get(); ok {
+		if clientTLS := tlsProvider.RedisClientTLSProvider(name); clientTLS != nil {
+			tlsConfig := RaiseVal(certs.ConfigureClientTLS(clientTLS))
+			if tlsConfig != nil {
+				cfg.TLSConfig = tlsConfig
+			}
+		}
+	}
 	if config, ok := this.override.Get(); ok {
 		config.RedisConfigOverride(name, &cfg)
 	}
@@ -85,14 +99,16 @@ func (this *redisStorageProvider) Storage(name string) fiber.Storage {
 type RedisAutoConfig struct {
 	Configuration
 
-	config   *RedisConfigurationProperties `@:"Inject"`
-	override Optional[RedisConfigOverride] `@:"Inject"`
+	config      *RedisConfigurationProperties    `@:"Inject"`
+	override    Optional[RedisConfigOverride]    `@:"Inject"`
+	tlsProvider Optional[RedisClientTLSProvider] `@:"Inject"`
 }
 
 func (this *RedisAutoConfig) Redis(_ struct {
 	Qualifier `Name:"redis"`
-}) StorageEngine {
-	return &redisStorageProvider{this.config, this.override}
+},
+) StorageEngine {
+	return &redisStorageProvider{this.config, this.override, this.tlsProvider}
 }
 
 func (this *RedisAutoConfig) RedisDefault(

@@ -70,3 +70,10 @@ func (this *MySecurityTweaks) CsrfSecurityConfig(server string, config *csrf.Con
 }
 
 ```
+
+## Server TLS Integration
+
+When configuring HTTPS for a Fiber server, you can pair `FiberListenConfig` with `certs.ServerTLSProvider` and `certs.ServerTLSCustomizer` from `rays-web-security/pkg/certs`.
+
+If a `FiberListenConfig` component implements `certs.ServerTLSProvider`, Rays Fiber automatically applies the provided `*tls.Config` to the server's listener, and if it also implements `certs.ServerTLSCustomizer`, applies custom TLS settings before starting the server. See the [Configuration documentation](../../4-configuration/#server-tls-configuration-servertlsprovider--servertlscustomizer) for details and examples.
+

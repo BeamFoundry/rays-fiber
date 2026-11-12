@@ -2,6 +2,7 @@ package internal_test
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"reflect"
 	"testing"
@@ -15,7 +16,9 @@ import (
 
 	. "github.com/gofiber/storage"
 
+	"github.com/BeamFoundry/rays-web-security/pkg/certs"
 	. "github.com/BeamFoundry/rays/pkg/core"
+	. "github.com/BeamFoundry/rays/pkg/lang"
 	. "github.com/BeamFoundry/rays/pkg/testing"
 
 	"github.com/gofiber/storage/etcd/v2"
@@ -31,24 +34,69 @@ func TestEtcd(t *testing.T) {
 
 type TestEtcdConfig struct {
 	Component
+	capturedTLS *tls.Config
 }
 
 // EtcdConfigOverride implements [etcd.EtcdConfigOverride].
-func (t *TestEtcdConfig) EtcdConfigOverride(_ string, _ *etcd.Config) {
+func (t *TestEtcdConfig) EtcdConfigOverride(_ string, config *etcd.Config) {
+	t.capturedTLS = config.TLS
 }
 
 var _ EtcdConfigOverride = &TestEtcdConfig{}
 
+type TestEtcdTLSProvider struct {
+	Component
+}
+
+func (t *TestEtcdTLSProvider) ProvideClientTLS() (*tls.Config, Error) {
+	return &tls.Config{ServerName: "etcd-tls"}, nil
+}
+
+func (t *TestEtcdTLSProvider) EtcdClientTLSProvider(instance string) certs.ClientTLSProvider {
+	if instance == "primary" {
+		return t
+	}
+	return nil
+}
+
+var _ EtcdClientTLSProvider = &TestEtcdTLSProvider{}
+
+type TestEtcdConfigWithTLS struct {
+	Component
+	capturedTLS *tls.Config
+}
+
+func (t *TestEtcdConfigWithTLS) ProvideClientTLS() (*tls.Config, Error) {
+	return &tls.Config{ServerName: "etcd-from-override"}, nil
+}
+
+func (t *TestEtcdConfigWithTLS) EtcdClientTLSProvider(instance string) certs.ClientTLSProvider {
+	if instance == "primary" {
+		return t
+	}
+	return nil
+}
+
+func (t *TestEtcdConfigWithTLS) EtcdConfigOverride(_ string, config *etcd.Config) {
+	t.capturedTLS = config.TLS
+}
+
+var (
+	_ EtcdConfigOverride    = &TestEtcdConfigWithTLS{}
+	_ EtcdClientTLSProvider = &TestEtcdConfigWithTLS{}
+)
+
 var _ = Describe("Etcd", func() {
 	It("can register a etcd Storage", func() {
-
 		ctx := context.Background()
 		etcdContainer, err := container.Run(ctx, "gcr.io/etcd-development/etcd:v3.5.14", testcontainers.WithLogger(GetLogger()))
 
 		Expect(err).NotTo(HaveOccurred())
 
-		ip, _ := etcdContainer.Host(ctx)
-		port, _ := etcdContainer.MappedPort(ctx, "2379")
+		ip, err := etcdContainer.Host(ctx)
+		Expect(err).NotTo(HaveOccurred())
+		port, err := etcdContainer.MappedPort(ctx, "2379")
+		Expect(err).NotTo(HaveOccurred())
 
 		endpoints := fmt.Sprintf("%s:%s", ip, port.Port())
 		config := map[string]any{
@@ -60,7 +108,7 @@ var _ = Describe("Etcd", func() {
 			},
 		}
 
-		GetContainer().LoadConfigAt(config, "rays.fiber.storage")
+		Expect(GetContainer().LoadConfigAt(config, "rays.fiber.storage")).To(Succeed())
 		AddBeamFor(&TestEtcdConfig{})
 		GetContainer().EnableScanning()
 
@@ -77,5 +125,56 @@ var _ = Describe("Etcd", func() {
 
 		testcontainers.CleanupContainer(GinkgoTB(), etcdContainer)
 		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("can configure TLS via EtcdClientTLSProvider", func() {
+		config := map[string]any{
+			"primary": "etcd",
+			"etcd": map[string]any{
+				"primary": map[string]any{
+					"endpoints": []any{"127.0.0.1:2379"},
+				},
+			},
+		}
+
+		Expect(GetContainer().LoadConfigAt(config, "rays.fiber.storage")).To(Succeed())
+		cfgBeam := &TestEtcdConfig{}
+		AddBeamFor(cfgBeam)
+		AddBeamFor(&TestEtcdTLSProvider{})
+		GetContainer().EnableScanning()
+
+		err := GetContainer().Initialize()
+		Expect(err).NotTo(HaveOccurred())
+
+		provider := GetBeamScopedInstance[StorageProvider]()
+		st := provider.Provide("etcd")
+		Expect(st).NotTo(BeNil())
+		Expect(cfgBeam.capturedTLS).NotTo(BeNil())
+		Expect(cfgBeam.capturedTLS.ServerName).To(Equal("etcd-tls"))
+	})
+
+	It("can configure TLS via EtcdConfigOverride implementing ClientTLSProvider", func() {
+		config := map[string]any{
+			"primary": "etcd",
+			"etcd": map[string]any{
+				"primary": map[string]any{
+					"endpoints": []any{"127.0.0.1:2379"},
+				},
+			},
+		}
+
+		Expect(GetContainer().LoadConfigAt(config, "rays.fiber.storage")).To(Succeed())
+		cfgBeam := &TestEtcdConfigWithTLS{}
+		AddBeamFor(cfgBeam)
+		GetContainer().EnableScanning()
+
+		err := GetContainer().Initialize()
+		Expect(err).NotTo(HaveOccurred())
+
+		provider := GetBeamScopedInstance[StorageProvider]()
+		st := provider.Provide("etcd")
+		Expect(st).NotTo(BeNil())
+		Expect(cfgBeam.capturedTLS).NotTo(BeNil())
+		Expect(cfgBeam.capturedTLS.ServerName).To(Equal("etcd-from-override"))
 	})
 })

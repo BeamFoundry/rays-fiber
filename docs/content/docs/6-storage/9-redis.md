@@ -47,6 +47,47 @@ func (this *RedisCustomizer) RedisConfigOverride(instance string, config *redis.
 var _, _ = any(&RedisCustomizer{}).(Stereotype)
 ```
 
+## Client TLS Configuration (`RedisClientTLSProvider`)
+
+To configure TLS for Redis connections using `rays-web-security`, create a `Component` that implements `RedisClientTLSProvider`. Its method receives the storage instance name and returns a `certs.ClientTLSProvider` (or `nil` to bypass TLS for that instance):
+
+```go
+package configurations
+
+import (
+    "crypto/tls"
+
+    "github.com/BeamFoundry/rays-web-security/pkg/certs"
+    . "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/redis"
+    . "github.com/BeamFoundry/rays/pkg/core"
+    . "github.com/BeamFoundry/rays/pkg/lang"
+)
+
+type RedisTLSProvider struct {
+    Component
+}
+
+// RedisClientTLSProvider returns a ClientTLSProvider for the specified instance
+func (this *RedisTLSProvider) RedisClientTLSProvider(instance string) certs.ClientTLSProvider {
+    if instance == "primary" {
+        return this
+    }
+    return nil
+}
+
+// ProvideClientTLS provides the *tls.Config for the Redis connection
+func (this *RedisTLSProvider) ProvideClientTLS() (*tls.Config, Error) {
+    return &tls.Config{
+        ServerName: "redis.example.com",
+    }, nil
+}
+
+var _ RedisClientTLSProvider = &RedisTLSProvider{}
+var _ certs.ClientTLSProvider = &RedisTLSProvider{}
+```
+
+> **💡 Override Integration:** A `RedisConfigOverride` component can also implement `RedisClientTLSProvider` directly. In all cases, `RedisConfigOverride` will still be invoked after TLS is set up, allowing you to inspect or further tune the final configuration.
+
 ## Default YAML Configuration
 
 The framework provisions the `"primary"` instance of this driver with the following default settings. To customize it or configure copied instances, modify your `application.yaml`:

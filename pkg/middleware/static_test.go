@@ -4,6 +4,7 @@ import (
 	////"net/http/httptest"
 
 	"io/fs"
+	"os"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,7 +34,7 @@ var _ StaticConfig = &StaticPathFilter{}
 
 // StaticFS implements [middleware.StaticFS].
 func (s *StaticPathFilter) StaticFS() fs.FS {
-	return nil
+	return os.DirFS("./testdata")
 }
 
 // StaticNext implements [middleware.StaticNext].

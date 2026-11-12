@@ -110,7 +110,7 @@ func (this *FiberSecurityHandler) TLSConnectionState() *tls.ConnectionState {
 	if this.req != nil && this.req.TLS != nil {
 		return this.req.TLS
 	}
-	if this.ctx.RequestCtx() != nil {
+	if this.ctx != nil && this.ctx.RequestCtx() != nil {
 		return this.ctx.RequestCtx().TLSConnectionState()
 	}
 	return nil
