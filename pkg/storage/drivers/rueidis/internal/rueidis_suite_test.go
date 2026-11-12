@@ -56,6 +56,7 @@ func startTLSTestServer(targetAddr string) (tlsAddr string, certPool *x509.CertP
 				return
 			}
 			go func(c net.Conn) {
+				defer GinkgoRecover()
 				defer func() {
 					if closeErr := c.Close(); closeErr != nil && !errors.Is(closeErr, net.ErrClosed) {
 						Expect(closeErr).NotTo(HaveOccurred())
@@ -74,16 +75,22 @@ func startTLSTestServer(targetAddr string) (tlsAddr string, certPool *x509.CertP
 
 				done := make(chan struct{}, 2)
 				go func() {
+					defer GinkgoRecover()
+					defer func() {
+						done <- struct{}{}
+					}()
 					if _, copyErr := io.Copy(backendConn, c); copyErr != nil && !errors.Is(copyErr, net.ErrClosed) {
 						Expect(copyErr).NotTo(HaveOccurred())
 					}
-					done <- struct{}{}
 				}()
 				go func() {
+					defer GinkgoRecover()
+					defer func() {
+						done <- struct{}{}
+					}()
 					if _, copyErr := io.Copy(c, backendConn); copyErr != nil && !errors.Is(copyErr, net.ErrClosed) {
 						Expect(copyErr).NotTo(HaveOccurred())
 					}
-					done <- struct{}{}
 				}()
 				select {
 				case <-done:
