@@ -82,8 +82,7 @@ func (this *RueidisTLSProvider) ProvideClientTLS() (*tls.Config, Error) {
     }, nil
 }
 
-var _ RueidisClientTLSProvider = &RueidisTLSProvider{}
-var _ certs.ClientTLSProvider = &RueidisTLSProvider{}
+var _, _ = any(&RueidisTLSProvider{}).(Stereotype)
 ```
 
 > **💡 Override Integration:** A `RueidisConfigOverride` component can also implement `RueidisClientTLSProvider` directly. In all cases, `RueidisConfigOverride` will still be invoked after TLS is set up, allowing you to inspect or further tune the final configuration.
