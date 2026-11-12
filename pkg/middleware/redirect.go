@@ -3,6 +3,7 @@ package middleware
 import (
 	. "github.com/BeamFoundry/rays/pkg/core"
 	. "github.com/BeamFoundry/rays/pkg/lang"
+	. "github.com/BeamFoundry/rays/pkg/util"
 
 	. "github.com/BeamFoundry/rays-fiber/pkg/middleware/internal"
 
@@ -33,7 +34,7 @@ type RedirectConfig interface {
 }
 
 type redirectConfigurationProperties struct {
-	rules      []map[string]*string
+	rules      []MapEntry[string, *string]
 	statusCode int
 }
 
@@ -47,10 +48,9 @@ func (this *redirectConfig) Config() redirect.Config {
 	config := redirect.ConfigDefault
 
 	ruleList := []redirect.Rule{}
-	for _, rules := range this.redirect.rules {
-		for k, v := range rules {
-			rule := redirect.Rule{From: k, To: *v}
-			ruleList = append(ruleList, rule)
+	for _, rule := range this.redirect.rules {
+		if rule.Value() != nil {
+			ruleList = append(ruleList, redirect.Rule{From: rule.Key(), To: *rule.Value()})
 		}
 	}
 	config.RuleList = ruleList
@@ -94,7 +94,7 @@ func (this *redirectConfig) Config() redirect.Config {
 //				primary:
 //					redirect:
 //						rules:
-//							/api/*: null # null values will be ignored.
+//							- /api/*: null # null values will be ignored.
 //						statusCode: 302
 //
 // [redirect]: https://docs.gofiber.io/middleware/redirect/#config

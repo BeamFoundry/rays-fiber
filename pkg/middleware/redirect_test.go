@@ -17,6 +17,7 @@ import (
 type RedirectPathFilter struct {
 	FiberPathFilter
 	Redirect
+	capturedConfig *redirect.Config
 }
 
 var _ RedirectNext = &RedirectPathFilter{}
@@ -29,20 +30,34 @@ func (r *RedirectPathFilter) RedirectNext() func(fiber.Ctx) bool {
 }
 
 // RedirectConfig implements [middleware.RedirectConfig].
-func (r *RedirectPathFilter) RedirectConfig(_ *redirect.Config) {}
+func (r *RedirectPathFilter) RedirectConfig(cfg *redirect.Config) {
+	r.capturedConfig = cfg
+}
 
 var _ = Describe("Redirect", func() {
 	It("can use Redirect", func() {
 		cfg := map[string]any{
-			"rules": map[string]any{
-				"/old/*": "/new/$1",
+			"rules": []any{
+				map[string]any{
+					"/old/*": "/new/$1",
+				},
+				map[string]any{
+					"/ignored/*": nil,
+				},
 			},
+			"statusCode": 301,
 		}
 		Expect(GetContainer().LoadConfigAt(cfg, "rays.fiber.servers.primary.redirect")).NotTo(HaveOccurred())
-		AddBeamFor(&RedirectPathFilter{})
+		filter := &RedirectPathFilter{}
+		AddBeamFor(filter)
 		AddBeamFor(&MiddlewareTestController{})
 		GetContainer().EnableScanning()
 		err := GetContainer().Initialize()
 		Expect(err).NotTo(HaveOccurred())
+		Expect(filter.capturedConfig).NotTo(BeNil())
+		Expect(filter.capturedConfig.StatusCode).To(Equal(301))
+		Expect(filter.capturedConfig.RuleList).To(HaveLen(1))
+		Expect(filter.capturedConfig.RuleList[0].From).To(Equal("/old/*"))
+		Expect(filter.capturedConfig.RuleList[0].To).To(Equal("/new/$1"))
 	})
 })

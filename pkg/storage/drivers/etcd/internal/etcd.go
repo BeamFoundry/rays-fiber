@@ -7,6 +7,7 @@ import (
 	. "github.com/BeamFoundry/rays/pkg/lang"
 
 	. "github.com/BeamFoundry/rays-fiber/pkg/core"
+	"github.com/BeamFoundry/rays-web-security/pkg/certs"
 
 	"github.com/gofiber/storage/etcd/v2"
 
@@ -17,12 +18,15 @@ type EtcdConfigOverride interface {
 	EtcdConfigOverride(instance string, config *etcd.Config)
 }
 
+type EtcdClientTLSProvider interface {
+	EtcdClientTLSProvider(instance string) certs.ClientTLSProvider
+}
+
 type etcdConfig struct {
-	endpoints   []string
-	dialTimeout time.Duration
 	username    string
 	password    string
-	//TLS *tls.Config
+	endpoints   []string
+	dialTimeout time.Duration
 }
 
 func (this etcdConfig) Config() etcd.Config {
@@ -42,23 +46,32 @@ type EtcdConfigurationProperties struct {
 	etcd map[string]etcdConfig
 }
 
-var _, _ = (any)(&EtcdConfigurationProperties{}).(Stereotype)
+var _, _ = any(&EtcdConfigurationProperties{}).(Stereotype)
 
 func (this *EtcdConfigurationProperties) Config(name string) etcd.Config {
-	if c, ok := this.etcd[name]; ok {
-		return c.Config()
-	} else {
-		return this.etcd["primary"].Config()
+	c, ok := this.etcd[name]
+	if !ok {
+		c = this.etcd["primary"]
 	}
+	return c.Config()
 }
 
 type etcdStorageProvider struct {
-	cfg      *EtcdConfigurationProperties
-	override Optional[EtcdConfigOverride]
+	cfg         *EtcdConfigurationProperties
+	override    Optional[EtcdConfigOverride]
+	tlsProvider Optional[EtcdClientTLSProvider]
 }
 
 func (this *etcdStorageProvider) Storage(name string) fiber.Storage {
 	cfg := this.cfg.Config(name)
+	if tlsProvider, ok := this.tlsProvider.Get(); ok {
+		if clientTLS := tlsProvider.EtcdClientTLSProvider(name); clientTLS != nil {
+			tlsConfig := RaiseVal(certs.ConfigureClientTLS(clientTLS))
+			if tlsConfig != nil {
+				cfg.TLS = tlsConfig
+			}
+		}
+	}
 	if config, ok := this.override.Get(); ok {
 		config.EtcdConfigOverride(name, &cfg)
 	}
@@ -68,14 +81,16 @@ func (this *etcdStorageProvider) Storage(name string) fiber.Storage {
 type EtcdAutoConfig struct {
 	Configuration
 
-	config   *EtcdConfigurationProperties `@:"Inject"`
-	override Optional[EtcdConfigOverride] `@:"Inject"`
+	config      *EtcdConfigurationProperties    `@:"Inject"`
+	override    Optional[EtcdConfigOverride]    `@:"Inject"`
+	tlsProvider Optional[EtcdClientTLSProvider] `@:"Inject"`
 }
 
 func (this *EtcdAutoConfig) Etcd(_ struct {
 	Qualifier `Name:"etcd"`
-}) StorageEngine {
-	return &etcdStorageProvider{this.config, this.override}
+},
+) StorageEngine {
+	return &etcdStorageProvider{this.config, this.override, this.tlsProvider}
 }
 
 func (this *EtcdAutoConfig) EtcdDefault(

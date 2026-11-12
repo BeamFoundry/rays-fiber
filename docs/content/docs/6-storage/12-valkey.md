@@ -47,6 +47,47 @@ func (this *ValkeyCustomizer) ValkeyConfigOverride(instance string, config *valk
 var _, _ = any(&ValkeyCustomizer{}).(Stereotype)
 ```
 
+## Client TLS Configuration (`ValkeyClientTLSProvider`)
+
+To configure TLS for Valkey connections using `rays-web-security`, create a `Component` that implements `ValkeyClientTLSProvider`. Its method receives the storage instance name and returns a `certs.ClientTLSProvider` (or `nil` to bypass TLS for that instance):
+
+```go
+package configurations
+
+import (
+    "crypto/tls"
+
+    "github.com/BeamFoundry/rays-web-security/pkg/certs"
+    . "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/valkey"
+    . "github.com/BeamFoundry/rays/pkg/core"
+    . "github.com/BeamFoundry/rays/pkg/lang"
+)
+
+type ValkeyTLSProvider struct {
+    Component
+}
+
+// ValkeyClientTLSProvider returns a ClientTLSProvider for the specified instance
+func (this *ValkeyTLSProvider) ValkeyClientTLSProvider(instance string) certs.ClientTLSProvider {
+    if instance == "primary" {
+        return this
+    }
+    return nil
+}
+
+// ProvideClientTLS provides the *tls.Config for the Valkey connection
+func (this *ValkeyTLSProvider) ProvideClientTLS() (*tls.Config, Error) {
+    return &tls.Config{
+        ServerName: "valkey.example.com",
+    }, nil
+}
+
+var _ ValkeyClientTLSProvider = &ValkeyTLSProvider{}
+var _ certs.ClientTLSProvider = &ValkeyTLSProvider{}
+```
+
+> **💡 Override Integration:** A `ValkeyConfigOverride` component can also implement `ValkeyClientTLSProvider` directly. In all cases, `ValkeyConfigOverride` will still be invoked after TLS is set up, allowing you to inspect or further tune the final configuration.
+
 ## Default YAML Configuration
 
 The framework provisions the `"primary"` instance of this driver with the following default settings. To customize it or configure copied instances, modify your `application.yaml`:

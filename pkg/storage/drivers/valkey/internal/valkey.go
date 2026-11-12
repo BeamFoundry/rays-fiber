@@ -7,6 +7,7 @@ import (
 	. "github.com/BeamFoundry/rays/pkg/lang"
 
 	. "github.com/BeamFoundry/rays-fiber/pkg/core"
+	"github.com/BeamFoundry/rays-web-security/pkg/certs"
 
 	"github.com/gofiber/storage/valkey"
 
@@ -17,27 +18,31 @@ type ValkeyConfigOverride interface {
 	ValkeyConfigOverride(instance string, config *valkey.Config)
 }
 
+type ValkeyClientTLSProvider interface {
+	ValkeyClientTLSProvider(instance string) certs.ClientTLSProvider
+}
+
 type valkeyConfig struct {
-	username            string
 	password            string
 	clientName          string
 	url                 string
-	selectDB            int
+	username            string
 	initAddress         []string
+	readBufferEachConn  int
 	cacheSizeEachConn   int
 	ringScaleEachConn   int
-	readBufferEachConn  int
+	selectDB            int
 	writeBufferEachConn int
 	blockingPoolSize    int
 	pipelineMultiplex   int
+	cacheTTL            time.Duration
 	disableRetry        bool
 	disableCache        bool
 	alwaysPipelining    bool
 	reset               bool
-	cacheTTL            time.Duration
 }
 
-func (this valkeyConfig) Config() valkey.Config {
+func (this *valkeyConfig) Config() valkey.Config {
 	config := valkey.ConfigDefault
 	config.Username = this.username
 	config.Password = this.password
@@ -68,22 +73,31 @@ type ValkeyConfigurationProperties struct {
 }
 
 func (this *ValkeyConfigurationProperties) Config(name string) valkey.Config {
-	if c, ok := this.valkey[name]; ok {
-		return c.Config()
-	} else {
-		return this.valkey["primary"].Config()
+	c, ok := this.valkey[name]
+	if !ok {
+		c = this.valkey["primary"]
 	}
+	return c.Config()
 }
 
 var _, _ = any(&ValkeyConfigurationProperties{}).(Stereotype)
 
 type valkeyStorageProvider struct {
-	cfg      *ValkeyConfigurationProperties
-	override Optional[ValkeyConfigOverride]
+	cfg         *ValkeyConfigurationProperties
+	override    Optional[ValkeyConfigOverride]
+	tlsProvider Optional[ValkeyClientTLSProvider]
 }
 
 func (this *valkeyStorageProvider) Storage(name string) fiber.Storage {
 	cfg := this.cfg.Config(name)
+	if tlsProvider, ok := this.tlsProvider.Get(); ok {
+		if clientTLS := tlsProvider.ValkeyClientTLSProvider(name); clientTLS != nil {
+			tlsConfig := RaiseVal(certs.ConfigureClientTLS(clientTLS))
+			if tlsConfig != nil {
+				cfg.TLSConfig = tlsConfig
+			}
+		}
+	}
 	if config, ok := this.override.Get(); ok {
 		config.ValkeyConfigOverride(name, &cfg)
 	}
@@ -93,14 +107,16 @@ func (this *valkeyStorageProvider) Storage(name string) fiber.Storage {
 type ValkeyAutoConfig struct {
 	Configuration
 
-	config   *ValkeyConfigurationProperties `@:"Inject"`
-	override Optional[ValkeyConfigOverride] `@:"Inject"`
+	config      *ValkeyConfigurationProperties    `@:"Inject"`
+	override    Optional[ValkeyConfigOverride]    `@:"Inject"`
+	tlsProvider Optional[ValkeyClientTLSProvider] `@:"Inject"`
 }
 
 func (this *ValkeyAutoConfig) Valkey(_ struct {
 	Qualifier `Name:"valkey"`
-}) StorageEngine {
-	return &valkeyStorageProvider{this.config, this.override}
+},
+) StorageEngine {
+	return &valkeyStorageProvider{this.config, this.override, this.tlsProvider}
 }
 
 func (this *ValkeyAutoConfig) ValkeyDefault(

@@ -57,7 +57,7 @@ rays:
       primary:
         redirect:
           rules:
-            /api/*: null # null values will be ignored.
+            - /api/*: null # null values will be ignored.
           statusCode: 302
 ```
 

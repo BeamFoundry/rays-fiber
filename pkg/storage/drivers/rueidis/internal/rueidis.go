@@ -7,6 +7,7 @@ import (
 	. "github.com/BeamFoundry/rays/pkg/lang"
 
 	. "github.com/BeamFoundry/rays-fiber/pkg/core"
+	"github.com/BeamFoundry/rays-web-security/pkg/certs"
 
 	"github.com/gofiber/storage/rueidis"
 
@@ -17,28 +18,32 @@ type RueidisConfigOverride interface {
 	RueidisConfigOverride(instance string, config *rueidis.Config)
 }
 
+type RueidisClientTLSProvider interface {
+	RueidisClientTLSProvider(instance string) certs.ClientTLSProvider
+}
+
 type rueidisConfig struct {
-	username                string
 	password                string
 	clientName              string
 	url                     string
-	selectDB                int
+	username                string
 	initAddress             []string
+	readBufferEachConn      int
 	cacheSizeEachConn       int
 	ringScaleEachConn       int
-	readBufferEachConn      int
+	selectDB                int
 	writeBufferEachConn     int
 	blockingPoolSize        int
 	pipelineMultiplex       int
+	cacheTTL                time.Duration
 	disableRetry            bool
 	disableCache            bool
 	alwaysPipelining        bool
 	disableAlwaysPipelining bool
 	reset                   bool
-	cacheTTL                time.Duration
 }
 
-func (this rueidisConfig) Config() rueidis.Config {
+func (this *rueidisConfig) Config() rueidis.Config {
 	cfg := rueidis.ConfigDefault
 	cfg.Username = this.username
 	cfg.Password = this.password
@@ -70,22 +75,31 @@ type RueidisConfigurationProperties struct {
 }
 
 func (this *RueidisConfigurationProperties) Config(name string) rueidis.Config {
-	if c, ok := this.rueidis[name]; ok {
-		return c.Config()
-	} else {
-		return this.rueidis["primary"].Config()
+	c, ok := this.rueidis[name]
+	if !ok {
+		c = this.rueidis["primary"]
 	}
+	return c.Config()
 }
 
 var _, _ = any(&RueidisConfigurationProperties{}).(Stereotype)
 
 type rueidisStorageProvider struct {
-	cfg      *RueidisConfigurationProperties
-	override Optional[RueidisConfigOverride]
+	cfg         *RueidisConfigurationProperties
+	override    Optional[RueidisConfigOverride]
+	tlsProvider Optional[RueidisClientTLSProvider]
 }
 
 func (this *rueidisStorageProvider) Storage(name string) fiber.Storage {
 	cfg := this.cfg.Config(name)
+	if tlsProvider, ok := this.tlsProvider.Get(); ok {
+		if clientTLS := tlsProvider.RueidisClientTLSProvider(name); clientTLS != nil {
+			tlsConfig := RaiseVal(certs.ConfigureClientTLS(clientTLS))
+			if tlsConfig != nil {
+				cfg.TLSConfig = tlsConfig
+			}
+		}
+	}
 	if config, ok := this.override.Get(); ok {
 		config.RueidisConfigOverride(name, &cfg)
 	}
@@ -95,14 +109,16 @@ func (this *rueidisStorageProvider) Storage(name string) fiber.Storage {
 type RueidisAutoConfig struct {
 	Configuration
 
-	config   *RueidisConfigurationProperties `@:"Inject"`
-	override Optional[RueidisConfigOverride] `@:"Inject"`
+	config      *RueidisConfigurationProperties    `@:"Inject"`
+	override    Optional[RueidisConfigOverride]    `@:"Inject"`
+	tlsProvider Optional[RueidisClientTLSProvider] `@:"Inject"`
 }
 
 func (this *RueidisAutoConfig) Rueidis(_ struct {
 	Qualifier `Name:"rueidis"`
-}) StorageEngine {
-	return &rueidisStorageProvider{this.config, this.override}
+},
+) StorageEngine {
+	return &rueidisStorageProvider{this.config, this.override, this.tlsProvider}
 }
 
 func (this *RueidisAutoConfig) RueidisDefault(

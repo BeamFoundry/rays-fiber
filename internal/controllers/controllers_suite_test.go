@@ -1,12 +1,15 @@
 package controllers_test
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/BeamFoundry/rays-web-security/pkg/certs"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -44,6 +47,48 @@ func (this *TestCustomizer) FiberListenConfig(*fiber.ListenConfig) {}
 var _ FiberConfig = &TestCustomizer{}
 
 var _ FiberListenConfig = &TestCustomizer{}
+
+type TestTLSListenCustomizer struct {
+	Qualifier      `Name:"primary"`
+	providedConfig *tls.Config
+	customized     bool
+}
+
+func (this *TestTLSListenCustomizer) FiberListenConfig(*fiber.ListenConfig) {}
+
+func (this *TestTLSListenCustomizer) ProvideServerTLS() (*tls.Config, Error) {
+	this.providedConfig = &tls.Config{ServerName: "first"}
+	return this.providedConfig, nil
+}
+
+func (this *TestTLSListenCustomizer) CustomizeServerTLS(config *tls.Config) Error {
+	this.customized = true
+	config.MinVersion = tls.VersionTLS13
+	return nil
+}
+
+var (
+	_ FiberListenConfig         = &TestTLSListenCustomizer{}
+	_ certs.ServerTLSProvider   = &TestTLSListenCustomizer{}
+	_ certs.ServerTLSCustomizer = &TestTLSListenCustomizer{}
+)
+
+type TestSecondTLSListenCustomizer struct {
+	Qualifier `Name:"primary"`
+	called    bool
+}
+
+func (this *TestSecondTLSListenCustomizer) FiberListenConfig(*fiber.ListenConfig) {}
+
+func (this *TestSecondTLSListenCustomizer) ProvideServerTLS() (*tls.Config, Error) {
+	this.called = true
+	return &tls.Config{ServerName: "second"}, nil
+}
+
+var (
+	_ FiberListenConfig       = &TestSecondTLSListenCustomizer{}
+	_ certs.ServerTLSProvider = &TestSecondTLSListenCustomizer{}
+)
 
 type TestAppMiddleware struct {
 	beam *BeamWithValue `@:"Inject,Qualifier{app}"`
@@ -627,6 +672,44 @@ var _ = Describe("Controller", func() {
 		provider := GetBeamScopedInstance[FiberAppProvider]()
 		Expect(provider.Provide("primary")).NotTo(BeNil())
 		Expect(provider.Provide("default")).To(BeNil())
+	})
+
+	It("can configure listener TLS from ServerTLSProvider and ServerTLSCustomizer", func() {
+		tlsCustomizer := &TestTLSListenCustomizer{}
+		AddBeamFor(tlsCustomizer)
+		GetContainer().EnableScanning()
+		err := GetContainer().Initialize()
+		Expect(err).NotTo(HaveOccurred())
+
+		server := GetBeamScopedInstance[*FiberAppServerConfig]()
+		listener := server.Listener("primary")
+		Expect(listener.TLSConfig).NotTo(BeNil())
+		Expect(listener.TLSConfig.ServerName).To(Equal("first"))
+		Expect(listener.TLSConfig.MinVersion).To(Equal(uint16(tls.VersionTLS13)))
+		Expect(tlsCustomizer.customized).To(BeTrue())
+	})
+
+	It("configures listener TLS only once even if multiple FiberListenConfig implement ServerTLSProvider", func() {
+		tlsCustomizer := &TestTLSListenCustomizer{}
+		secondCustomizer := &TestSecondTLSListenCustomizer{}
+		AddBeamFor(tlsCustomizer)
+		AddBeamFor(secondCustomizer)
+		GetContainer().EnableScanning()
+		err := GetContainer().Initialize()
+		Expect(err).NotTo(HaveOccurred())
+
+		server := GetBeamScopedInstance[*FiberAppServerConfig]()
+		listener := server.Listener("primary")
+		Expect(listener.TLSConfig).NotTo(BeNil())
+		// Exactly one of the two configured it
+		if listener.TLSConfig.ServerName == "first" {
+			Expect(tlsCustomizer.providedConfig).NotTo(BeNil())
+			Expect(secondCustomizer.called).To(BeFalse())
+		} else {
+			Expect(listener.TLSConfig.ServerName).To(Equal("second"))
+			Expect(secondCustomizer.called).To(BeTrue())
+			Expect(tlsCustomizer.providedConfig).To(BeNil())
+		}
 	})
 
 	It("can and refuse to register a controller on an invalid server", func() {
