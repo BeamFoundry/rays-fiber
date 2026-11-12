@@ -185,8 +185,13 @@ func (this *MyServerTLSConfig) FiberListenConfig(cfg *fiber.ListenConfig) {
 
 // Provides the server TLS configuration
 func (this *MyServerTLSConfig) ProvideServerTLS() (*tls.Config, Error) {
+    cert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+    if err != nil {
+        return nil, NewErrorFrom(err)
+    }
     return &tls.Config{
-        MinVersion: tls.VersionTLS13,
+        Certificates: []tls.Certificate{cert},
+        MinVersion:   tls.VersionTLS13,
     }, nil
 }
 
