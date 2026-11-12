@@ -6,14 +6,18 @@ fmt:
 	go vet ./...
 	go fmt ./...
 
-.PHONY: test-rays-fiber
-test-rays-fiber: fmt
-	ginkgo run --cover ./middleware ./security ./storage
+.PHONY: fix
+fix: fmt
+	go fix ./...
 
-.PHONY: test-storages
-test-storages: fmt
-	cd storage/memcache && ginkgo run --cover ./
-	cd storage/redis && ginkgo run --cover ./
+.PHONY: clean
+clean:
+	rm -f coverprofile.out
 
 .PHONY: test
-test: test-rays-fiber test-storages
+test: fmt
+	golangci-lint run ./...
+	ginkgo run -cover ./...
+
+.PHONY: validate
+validate: fix test
