@@ -4,7 +4,9 @@ import (
 	"time"
 
 	. "github.com/BeamFoundry/rays-fiber/pkg/core"
+	"github.com/BeamFoundry/rays-web-security/pkg/certs"
 	. "github.com/BeamFoundry/rays/pkg/core"
+	. "github.com/BeamFoundry/rays/pkg/lang"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -142,7 +144,20 @@ func (this *FiberAppServerConfig) Config(name string) fiber.Config {
 func (this *FiberAppServerConfig) Listener(name string) fiber.ListenConfig {
 	listener := this.config.Listener(name)
 	if lns, ok := this.listenerCustomizer[name]; ok {
+		var tlsConfigured bool
 		for _, ln := range lns {
+			if !tlsConfigured {
+				if provider, ok := ln.(certs.ServerTLSProvider); ok {
+					tlsConfig := RaiseVal(provider.ProvideServerTLS())
+					if tlsConfig != nil {
+						listener.TLSConfig = tlsConfig
+						if customizer, ok := ln.(certs.ServerTLSCustomizer); ok {
+							RaiseErr(customizer.CustomizeServerTLS(listener.TLSConfig))
+						}
+						tlsConfigured = true
+					}
+				}
+			}
 			ln.FiberListenConfig(&listener)
 		}
 	}

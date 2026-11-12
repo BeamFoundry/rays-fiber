@@ -153,6 +153,50 @@ func (this *MyCustomFiberConfig) FiberListenConfig(cfg *fiber.ListenConfig) {
 
 ```
 
+### Server TLS Configuration (`ServerTLSProvider` & `ServerTLSCustomizer`)
+
+If your `FiberListenConfig` component also implements `certs.ServerTLSProvider` (from `github.com/BeamFoundry/rays-web-security/pkg/certs`), Rays Fiber will automatically call its `ProvideServerTLS()` method to configure `TLSConfig` on the listener (`fiber.ListenConfig.TLSConfig`).
+
+In addition, if the component also implements `certs.ServerTLSCustomizer`, `customizer.CustomizeServerTLS(listener.TLSConfig)` is invoked right after to allow further adjustments to the resulting TLS configuration.
+
+> **💡 Single Provider Guarantee:** Only one TLS provider will configure TLS on a given listener, even if multiple `FiberListenConfig` components are registered for that server.
+
+```go
+package configurations
+
+import (
+    "crypto/tls"
+
+    "github.com/gofiber/fiber/v3"
+    "github.com/BeamFoundry/rays-web-security/pkg/certs"
+    . "github.com/BeamFoundry/rays-fiber/pkg/core"
+    . "github.com/BeamFoundry/rays/pkg/core"
+    . "github.com/BeamFoundry/rays/pkg/lang"
+)
+
+type MyServerTLSConfig struct {
+    Component
+}
+
+// Intercepts the listener configuration
+func (this *MyServerTLSConfig) FiberListenConfig(cfg *fiber.ListenConfig) {
+    // Custom listener options
+}
+
+// Provides the server TLS configuration
+func (this *MyServerTLSConfig) ProvideServerTLS() (*tls.Config, Error) {
+    return &tls.Config{
+        MinVersion: tls.VersionTLS13,
+    }, nil
+}
+
+// Optionally customizes the server TLS configuration
+func (this *MyServerTLSConfig) CustomizeServerTLS(cfg *tls.Config) Error {
+    // Additional customizations (e.g., cipher suites, client auth)
+    return nil
+}
+```
+
 ## Lifecycle Management (`BeamRunner`)
 
 Internally, the `fiber.App` instance is managed as a `BeamRunner` component.

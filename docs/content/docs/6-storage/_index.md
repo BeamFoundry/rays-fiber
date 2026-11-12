@@ -75,6 +75,21 @@ rays:
           port: 6380
 ```
 
+## Client TLS Configuration
+
+Storage drivers that connect to network services and accept TLS configurations (`redis`, `etcd`, `rueidis`, and `valkey`) provide dedicated `<Driver>ClientTLSProvider` interfaces.
+
+Each driver interface exposes a unique method that accepts the storage instance name (`instance string`) and returns a `certs.ClientTLSProvider` (from `github.com/BeamFoundry/rays-web-security/pkg/certs`):
+
+| Driver | Interface | Method Signature |
+|---|---|---|
+| **Redis** | `RedisClientTLSProvider` | `RedisClientTLSProvider(instance string) certs.ClientTLSProvider` |
+| **Etcd** | `EtcdClientTLSProvider` | `EtcdClientTLSProvider(instance string) certs.ClientTLSProvider` |
+| **Rueidis** | `RueidisClientTLSProvider` | `RueidisClientTLSProvider(instance string) certs.ClientTLSProvider` |
+| **Valkey** | `ValkeyClientTLSProvider` | `ValkeyClientTLSProvider(instance string) certs.ClientTLSProvider` |
+
+Returning `nil` for an instance leaves TLS unconfigured for that instance, allowing granular per-instance TLS policies when multiple instances (e.g., `primary`, `secondary`) are defined.
+
 ## Available Drivers
 
 Rays Fiber supports (or is currently implementing) a wide variety of storage drivers. Click on a driver in the menu to see its default configuration and properties.

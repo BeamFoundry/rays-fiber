@@ -57,6 +57,6 @@ rays:
       primary:
         rewrite:
           rules:
-            /api/*: null # null values will be ignored.
+            - /api/*: null # null values will be ignored.
 ```
 
