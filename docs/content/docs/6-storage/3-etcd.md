@@ -49,7 +49,9 @@ var _, _ = any(&EtcdCustomizer{}).(Stereotype)
 
 ## Client TLS Configuration (`EtcdClientTLSProvider`)
 
-To configure TLS for Etcd connections using `rays-web-security`, create a `Component` that implements `EtcdClientTLSProvider`. Its method receives the storage instance name and returns a `certs.ClientTLSProvider` (or `nil` to bypass TLS for that instance):
+To configure TLS for Etcd connections using `rays-web-security`, create a `Component` that implements `EtcdClientTLSProvider`. Its method receives the storage instance name and returns a `certs.ClientTLSProvider` (or `nil` to bypass TLS for that instance).
+
+> **⚠️ Endpoint Scheme Requirement:** When enabling TLS, all Etcd endpoints configured under `endpoints:` must explicitly use the `https://` scheme (e.g., `https://127.0.0.1:2379`). Using `http://` endpoints causes the client to connect over an insecure transport, ignoring any supplied TLS credentials.
 
 ```go
 package configurations
@@ -82,8 +84,7 @@ func (this *EtcdTLSProvider) ProvideClientTLS() (*tls.Config, Error) {
     }, nil
 }
 
-var _ EtcdClientTLSProvider = &EtcdTLSProvider{}
-var _ certs.ClientTLSProvider = &EtcdTLSProvider{}
+var _, _ = any(&EtcdTLSProvider{}).(Stereotype)
 ```
 
 > **💡 Override Integration:** An `EtcdConfigOverride` component can also implement `EtcdClientTLSProvider` directly. In all cases, `EtcdConfigOverride` will still be invoked after TLS is set up, allowing you to inspect or further tune the final configuration.

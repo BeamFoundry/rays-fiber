@@ -82,8 +82,7 @@ func (this *ValkeyTLSProvider) ProvideClientTLS() (*tls.Config, Error) {
     }, nil
 }
 
-var _ ValkeyClientTLSProvider = &ValkeyTLSProvider{}
-var _ certs.ClientTLSProvider = &ValkeyTLSProvider{}
+var _, _ = any(&ValkeyTLSProvider{}).(Stereotype)
 ```
 
 > **💡 Override Integration:** A `ValkeyConfigOverride` component can also implement `ValkeyClientTLSProvider` directly. In all cases, `ValkeyConfigOverride` will still be invoked after TLS is set up, allowing you to inspect or further tune the final configuration.

@@ -52,12 +52,14 @@ func NewFileSystem(fs http.FileSystem, extension string) *Engine {
 // newEngine creates a new Engine instance with common initialization logic.
 func newEngine(directory, extension string, fs http.FileSystem) *Engine {
 	engine := &Engine{
-		Left:        "{{",
-		Right:       "}}",
-		Directory:   directory,
-		FileSystem:  fs,
-		Extension:   extension,
-		Funcmap:     make(map[string]any),
+		Engine: core.Engine{
+			Left:       "{{",
+			Right:      "}}",
+			Directory:  directory,
+			FileSystem: fs,
+			Extension:  extension,
+			Funcmap:    make(map[string]any),
+		},
 		TemplateMap: map[templateKey]*template.Template{},
 	}
 	addfunc := func(name string) {

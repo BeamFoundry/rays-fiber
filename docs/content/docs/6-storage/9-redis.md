@@ -82,8 +82,7 @@ func (this *RedisTLSProvider) ProvideClientTLS() (*tls.Config, Error) {
     }, nil
 }
 
-var _ RedisClientTLSProvider = &RedisTLSProvider{}
-var _ certs.ClientTLSProvider = &RedisTLSProvider{}
+var _, _ = any(&RedisTLSProvider{}).(Stereotype)
 ```
 
 > **💡 Override Integration:** A `RedisConfigOverride` component can also implement `RedisClientTLSProvider` directly. In all cases, `RedisConfigOverride` will still be invoked after TLS is set up, allowing you to inspect or further tune the final configuration.
