@@ -124,6 +124,8 @@ rays:
           statusCode: 302
         requestid:
           header: "X-Request-ID"
+        responsetime:
+          header: "X-Response-Time"
         rewrite:
           rules:
             - /api/*: null # null values will be ignored.
