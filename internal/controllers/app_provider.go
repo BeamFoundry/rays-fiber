@@ -108,23 +108,23 @@ func (this *DefaultAppProvider) customize(name string, app *fiber.App) {
 				app.Use(args...)
 			}
 		}
+	}
 
-		if err := Try(func() {
-			if _, ok := this.httpSecurity[name]; ok {
-				if chain, ok := this.securityFilterChain.Get(); ok {
-					ctx := context.Background()
-					ctx = context.WithValue(ctx, PrototypeContextProxyType, app)
-					ctx = context.WithValue(ctx, PrototypeContextProxyInstance, name)
-					mdw, err := this.securityMiddlewares.Forge(ctx)
-					this.logger.Debug("Initializing SecurityFilterChain")
-					chain.Initialize(name, mdw)
-					this.logger.Debug("SecurityFilterChain initialized")
-					RaiseNilErr(err)
-				}
+	if err := Try(func() {
+		if _, ok := this.httpSecurity[name]; ok {
+			if chain, ok := this.securityFilterChain.Get(); ok {
+				ctx := context.Background()
+				ctx = context.WithValue(ctx, PrototypeContextProxyType, app)
+				ctx = context.WithValue(ctx, PrototypeContextProxyInstance, name)
+				mdw, err := this.securityMiddlewares.Forge(ctx)
+				this.logger.Debug("Initializing SecurityFilterChain")
+				chain.Initialize(name, mdw)
+				this.logger.Debug("SecurityFilterChain initialized")
+				RaiseNilErr(err)
 			}
-		}); err != nil {
-			err.Log(slog.LevelWarn)
 		}
+	}); err != nil {
+		err.Log(slog.LevelWarn)
 	}
 }
 
