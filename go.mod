@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	github.com/BeamFoundry/rays v0.4.2
-	github.com/BeamFoundry/rays-web-security v0.3.0
+	github.com/BeamFoundry/rays-web-security v0.3.1
 	github.com/go-playground/validator/v10 v10.30.6
 	github.com/gofiber/fiber/v3 v3.7.0
 	github.com/gofiber/storage/memory/v2 v2.1.2
