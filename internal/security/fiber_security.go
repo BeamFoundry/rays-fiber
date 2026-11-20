@@ -223,17 +223,7 @@ func (this *FiberSecurityHandler) Redirect(to string, code int) error {
 
 // RenderView implements [core.SecurityHandler].
 func (this *FiberSecurityHandler) RenderView(view string, data map[string]any) error {
-	// FIXME: This is required, but should be removed once fixed.
-	// For unknown reason, "Locals" are now passed down in ctx.Render unless
-	// this is done here.
-	if this.ctx.App().Config().PassLocalsToViews {
-		this.ctx.Request().VisitUserValues(func(key []byte, value any) {
-			if _, ok := data[string(key)]; !ok {
-				data[string(key)] = value
-			}
-		})
-	}
-	return this.ctx.Render(view, data)
+	return this.ctx.Render(view, fiber.Map(data))
 }
 
 // Write implements [core.SecurityHandler].
