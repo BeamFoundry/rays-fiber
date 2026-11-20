@@ -25,7 +25,7 @@ type RequestMappingMethods struct {
 	CONNECT,
 	OPTIONS,
 	TRACE,
-	USE,
+	QUERY,
 	ALL Enum[RequestMappingMethods]
 }
 
