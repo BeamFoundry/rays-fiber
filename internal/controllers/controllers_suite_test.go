@@ -347,6 +347,15 @@ func (this *TestController) HelloPatch(
 	return ctx.SendString(this.beam.GetValue())
 }
 
+func (this *TestController) HelloQuery(
+	_ struct {
+		RequestMapping `Path:"/helloQUERY" Method:"QUERY"`
+	},
+	ctx fiber.Ctx,
+) error {
+	return ctx.SendString(this.beam.GetValue())
+}
+
 func (this *TestController) HelloAll(
 	_ struct {
 		RequestMapping `Path:"/helloALL" Method:"ALL"`

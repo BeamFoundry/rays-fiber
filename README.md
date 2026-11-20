@@ -317,7 +317,7 @@ rays:
           compressedFileSuffixes: {gzip: ".fiber.gz", br: ".fiber.br", zstd: ".fiber.zst"}
           concurrency: 262144
           readBufferSize: 4096
-          requestMethods: [GET,HEAD,POST,PUT,DELETE,CONNECT,OPTIONS,TRACE,PATCH]
+          requestMethods: [GET,HEAD,POST,PUT,DELETE,CONNECT,OPTIONS,TRACE,PATCH,QUERY]
           writeBufferSize: 4096
           appName: ""
           disableDefaultContentType: false
