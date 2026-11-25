@@ -3,76 +3,56 @@
   "packages": {
     ".": {
       "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber"
-    },
-    "pkg/middleware/contrib/otel": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/middleware/contrib/otel"
-    },
-    "pkg/storage/drivers/aerospike": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/aerospike"
-    },
-    "pkg/storage/drivers/couchbase": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/couchbase"
-    },
-    "pkg/storage/drivers/etcd": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/etcd"
-    },
-    "pkg/storage/drivers/memcache": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/memcache"
-    },
-    "pkg/storage/drivers/mongodb": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/mongodb"
-    },
-    "pkg/storage/drivers/mysql": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/mysql"
-    },
-    "pkg/storage/drivers/postgres": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/postgres"
-    },
-    "pkg/storage/drivers/redis": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/redis"
-    },
-    "pkg/storage/drivers/rueidis": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/rueidis"
-    },
-    "pkg/storage/drivers/sqlite3": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/sqlite3"
-    },
-    "pkg/storage/drivers/valkey": {
-      "release-type": "go",
-      "package-name": "github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/valkey"
-    }
-  },
-  "plugins": [
-    {
-      "type": "linked-versions",
-      "groupName": "core-and-extensions",
-      "components": [
-        "github.com/BeamFoundry/rays-fiber",
-        "github.com/BeamFoundry/rays-fiber/pkg/middleware/contrib/otel",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/aerospike",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/couchbase",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/etcd",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/memcache",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/mongodb",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/mysql",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/postgres",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/redis",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/rueidis",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/sqlite3",
-      	"github.com/BeamFoundry/rays-fiber/pkg/storage/drivers/valkey"
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "pkg/middleware/contrib/otel/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/aerospike/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/couchbase/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/etcd/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/memcache/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/mongodb/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/mysql/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/postgres/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/redis/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/rueidis/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/sqlite3/go.mod"
+        },
+        {
+          "type": "generic",
+          "path": "pkg/storage/drivers/valkey/go.mod"
+        }
       ]
     }
-  ]
+  }
 }
