@@ -28,6 +28,7 @@ type OtelPathFilter struct {
 }
 
 var (
+	_ FiberPreTxHandler                  = &Otel{}
 	_ OtelNext                           = &OtelPathFilter{}
 	_ OtelTracerProvider                 = &OtelPathFilter{}
 	_ OtelMeterProvider                  = &OtelPathFilter{}

@@ -14,6 +14,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.47.0
 )
 
+replace github.com/BeamFoundry/rays-fiber v0.3.2 => ../../../..
+
 require (
 	github.com/BeamFoundry/rays-web-security v0.3.1 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect

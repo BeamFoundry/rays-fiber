@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"runtime"
 	"slices"
+	"strings"
 
 	. "github.com/BeamFoundry/rays/pkg/core"
 	. "github.com/BeamFoundry/rays/pkg/lang"
@@ -107,6 +108,7 @@ func (this *FiberControllerConfig) getInstanceFilters(instance reflect.Value) []
 func (this *FiberControllerConfig) PostConstruct() Error {
 	this.logger.Debug("Processing controller", "type", this.parent.Type())
 	instance := this.container.GetInstance(this.parent)
+	serverName := "primary"
 	app := this.provider.Default()
 	if field := FindFieldForInterface[Server](this.parent.Type()); field != nil {
 		if server := GetFieldFirstTag(field, []string{"_", "Name", "Server"}); server != "" {
@@ -114,6 +116,7 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 			if a == nil {
 				return NewError("InvalidServerName", fmt.Sprintf("Server configuration name %s not defined", server))
 			}
+			serverName = server
 			app = a
 		}
 	}
@@ -258,7 +261,19 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 			}
 		}
 
-		finalHandlers := toAny(preTxHandlers)
+		var finalHandlers []any
+		if len(preTxHandlers) > 0 {
+			if this.provider.hasHttpSecurity(serverName) {
+				this.provider.registerPreTxHandlers(
+					serverName,
+					routeMethod.String(),
+					fullRoutePath(routerPath, routePath),
+					preTxHandlers...,
+				)
+			} else {
+				finalHandlers = append(finalHandlers, toAny(preTxHandlers)...)
+			}
+		}
 		if txMgr, ok := this.provider.txManager.Get(); ok {
 			finalHandlers = append(finalHandlers, bindTxContextHandler(txMgr))
 		}
@@ -276,4 +291,14 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 	}
 
 	return nil
+}
+
+func fullRoutePath(routerPath, routePath string) string {
+	if routerPath == "" {
+		return routePath
+	}
+	if routePath == "" {
+		return routerPath
+	}
+	return strings.TrimRight(routerPath, "/") + "/" + strings.TrimLeft(routePath, "/")
 }

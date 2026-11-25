@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"reflect"
 	"slices"
+	"strings"
 	"sync"
 
 	. "github.com/BeamFoundry/rays/pkg/core"
@@ -21,6 +22,12 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
+type preTxRoute struct {
+	method   string
+	path     string
+	handlers []fiber.Handler
+}
+
 type DefaultAppProvider struct {
 	Service
 	appsConfig          *FiberAppServerConfig        `@:"Inject"`
@@ -28,6 +35,7 @@ type DefaultAppProvider struct {
 	logger              Logging                      `@:"Inject"`
 	httpSecurity        map[string][]*HttpSecurity   `@:"Inject{GroupBy=Server,Default=primary}"`
 	apps                map[string]*fiber.App
+	preTxRoutes         map[string][]preTxRoute
 	securityMiddlewares Foundry[*FiberSecurityAppHandler] `@:"Inject"`
 	securityFilterChain Optional[SecurityFilterChain]     `@:"Inject"`
 	txManager           Optional[TransactionManager]      `@:"Inject"`
@@ -113,6 +121,7 @@ func (this *DefaultAppProvider) customize(name string, app *fiber.App) {
 
 	if err := Try(func() {
 		if _, ok := this.httpSecurity[name]; ok {
+			app.Use(this.preTxDispatchHandler(name))
 			if txMgr, ok := this.txManager.Get(); ok {
 				app.Use(bindTxContextHandler(txMgr))
 			}
@@ -130,6 +139,99 @@ func (this *DefaultAppProvider) customize(name string, app *fiber.App) {
 	}); err != nil {
 		err.Log(slog.LevelWarn)
 	}
+}
+
+func (this *DefaultAppProvider) hasHttpSecurity(name string) bool {
+	_, ok := this.httpSecurity[name]
+	return ok
+}
+
+func (this *DefaultAppProvider) registerPreTxHandlers(name, method, path string, handlers ...fiber.Handler) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	if this.preTxRoutes == nil {
+		this.preTxRoutes = map[string][]preTxRoute{}
+	}
+	this.preTxRoutes[name] = append(this.preTxRoutes[name], preTxRoute{
+		method:   method,
+		path:     path,
+		handlers: handlers,
+	})
+}
+
+func (this *DefaultAppProvider) preTxDispatchHandler(name string) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		this.lock.Lock()
+		routes := slices.Clone(this.preTxRoutes[name])
+		this.lock.Unlock()
+
+		var matched []fiber.Handler
+		for _, route := range routes {
+			if matchPreTxRoute(route.method, route.path, c.Method(), c.Path()) {
+				matched = append(matched, route.handlers...)
+			}
+		}
+		if len(matched) == 0 {
+			return c.Next()
+		}
+		if len(matched) == 1 {
+			return matched[0](c)
+		}
+		return runPreTxChain(c, matched)
+	}
+}
+
+type preTxCtx struct {
+	fiber.Ctx
+	next func() error
+}
+
+func (this *preTxCtx) Next() error {
+	return this.next()
+}
+
+func runPreTxChain(c fiber.Ctx, handlers []fiber.Handler) error {
+	idx := 0
+	var run func() error
+	run = func() error {
+		if idx >= len(handlers) {
+			return c.Next()
+		}
+		h := handlers[idx]
+		idx++
+		return h(&preTxCtx{Ctx: c, next: run})
+	}
+	return run()
+}
+
+func matchPreTxRoute(routeMethod, routePath, reqMethod, reqPath string) bool {
+	if routeMethod != (RequestMappingMethod{}).New().ALL.String() && routeMethod != reqMethod {
+		return false
+	}
+	return matchRoutePattern(routePath, reqPath)
+}
+
+func matchRoutePattern(pattern, reqPath string) bool {
+	if pattern == reqPath {
+		return true
+	}
+	pSegs := strings.Split(strings.Trim(pattern, "/"), "/")
+	rSegs := strings.Split(strings.Trim(reqPath, "/"), "/")
+	for i, p := range pSegs {
+		if p == "*" || p == "+" {
+			return true
+		}
+		if i >= len(rSegs) {
+			return false
+		}
+		if strings.HasPrefix(p, ":") {
+			continue
+		}
+		if p != rSegs[i] {
+			return false
+		}
+	}
+	return len(pSegs) == len(rSegs)
 }
 
 func bindTxContextHandler(txMgr TransactionManager) fiber.Handler {

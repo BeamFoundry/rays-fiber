@@ -16,6 +16,11 @@ import (
 
 	_ "github.com/BeamFoundry/rays-fiber"
 	. "github.com/BeamFoundry/rays-fiber/pkg/core"
+
+	_ "github.com/BeamFoundry/rays-web-security"
+	. "github.com/BeamFoundry/rays-web-security/pkg/config"
+	. "github.com/BeamFoundry/rays-web-security/pkg/core"
+	. "github.com/BeamFoundry/rays-web-security/pkg/testing"
 )
 
 type preTxCtxKey struct{}
@@ -111,6 +116,55 @@ func (this *TestTxOrderController) Plain(
 	return c.SendString("plain")
 }
 
+func (this *TestTxOrderController) ByID(
+	_ struct {
+		RequestMapping `Path:"/items/:id" Method:"GET"`
+	},
+	c fiber.Ctx,
+) error {
+	return c.SendString(c.Params("id"))
+}
+
+func (this *TestTxOrderController) Wildcard(
+	_ struct {
+		RequestMapping `Path:"/files/*" Method:"ALL"`
+	},
+	c fiber.Ctx,
+) error {
+	return c.SendString("wild")
+}
+
+type TestNoPrefixTxController struct {
+	Controller
+	TestPreTxMiddleware
+}
+
+func (this *TestNoPrefixTxController) Ping(
+	_ struct {
+		RequestMapping `Path:"/ping-pretx" Method:"GET"`
+	},
+	c fiber.Ctx,
+) error {
+	return c.SendString("pong")
+}
+
+type TestPreTxUserDetailsService struct {
+	Service
+	encoder PasswordEncoder     `@:"Inject"`
+	rec     *preTxOrderRecorder `@:"Inject"`
+}
+
+var _ UserDetailsService = &TestPreTxUserDetailsService{}
+
+func (this *TestPreTxUserDetailsService) LoadUserByUsername(username string) UserDetails {
+	val, _ := this.rec.txMgr.GetContext().Value(preTxCtxKey{}).(string)
+	Expect(val).To(Equal("enriched"))
+	this.rec.events = append(this.rec.events, "securityFilter")
+	mgr := InMemoryUserDetailsManager{}.New(this.encoder)
+	mgr.NewUser().WithUsername(username).WithPassword("pass").Build()
+	return mgr.LoadUserByUsername(username)
+}
+
 var _ = Describe("Transaction context middleware ordering", func() {
 	It("runs FiberPreTxHandler before bindTxContextHandler and other controller/method middlewares after without httpSecurity", func() {
 		rec := &preTxOrderRecorder{}
@@ -136,5 +190,68 @@ var _ = Describe("Transaction context middleware ordering", func() {
 		Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
 		Expect(rec.events).To(Equal([]string{"preTx", "ctrlMiddleware", "plain"}))
 		Expect(rec.txMgr.GetContext().Value(preTxCtxKey{})).To(BeNil())
+	})
+
+	It("runs controller-level FiberPreTxHandler before HttpSecurity filter chain", func() {
+		rec := &preTxOrderRecorder{}
+		AddBeamFor(rec)
+		AddBeamFor(&TestPreTxUserDetailsService{})
+		AddBeamFor(&TestTxOrderController{})
+		AddBeamFor(&TestNoPrefixTxController{})
+		httpSecurity := (&HttpSecurityBuilder{}).
+			AnyRequest().Authenticated().
+			Csrf().Disable().
+			Basic().
+			Build()
+		AddBeamFor(httpSecurity)
+		GetContainer().EnableScanning()
+		Expect(GetContainer().Initialize()).To(Succeed())
+
+		rec.txMgr = GetBeamScopedInstance[TransactionManager]()
+		app := GetBeamScopedInstance[FiberAppProvider]().Default()
+
+		// Multiple pre-tx handlers (controller + method) before HttpSecurity
+		req := httptest.NewRequest(http.MethodGet, "/tx-order/method", http.NoBody)
+		req.SetBasicAuth("user", "pass")
+		resp, err := app.Test(req)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
+		Expect(rec.events).To(Equal([]string{"preTx", "methodPreTx", "securityFilter", "ctrlMiddleware", "methodMiddleware", "handler"}))
+		Expect(rec.txMgr.GetContext().Value(preTxCtxKey{})).To(BeNil())
+
+		// Single pre-tx handler (:id param route) before HttpSecurity
+		rec.events = nil
+		req = httptest.NewRequest(http.MethodGet, "/tx-order/items/42", http.NoBody)
+		req.SetBasicAuth("user", "pass")
+		resp, err = app.Test(req)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
+		Expect(rec.events).To(Equal([]string{"preTx", "securityFilter", "ctrlMiddleware"}))
+
+		// Wildcard ALL route and controller without RequestMapping prefix
+		rec.events = nil
+		req = httptest.NewRequest(http.MethodPost, "/tx-order/files/a/b", http.NoBody)
+		req.SetBasicAuth("user", "pass")
+		resp, err = app.Test(req)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
+
+		rec.events = nil
+		req = httptest.NewRequest(http.MethodGet, "/ping-pretx", http.NoBody)
+		req.SetBasicAuth("user", "pass")
+		resp, err = app.Test(req)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
+
+		// Non-matching route (and shorter path than pattern) hits zero pre-tx handlers
+		req = httptest.NewRequest(http.MethodGet, "/tx-order/items", http.NoBody)
+		resp, err = app.Test(req)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(fiber.StatusUnauthorized))
+
+		req = httptest.NewRequest(http.MethodGet, "/unmatched", http.NoBody)
+		resp, err = app.Test(req)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(resp.StatusCode).To(Equal(fiber.StatusUnauthorized))
 	})
 })
