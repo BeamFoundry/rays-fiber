@@ -175,7 +175,14 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 	for _, method := range methods {
 		defaultIn := []reflect.Value{}
 		annotedType := reflect.TypeOf((*struct{})(nil)).Elem()
-		routeHandlers := []fiber.Handler{}
+		var preTxHandlers, postTxHandlers []fiber.Handler
+		appendMiddleware := func(mw FiberHandler, h fiber.Handler) {
+			if _, ok := mw.(FiberPreTxHandler); ok {
+				preTxHandlers = append(preTxHandlers, h)
+				return
+			}
+			postTxHandlers = append(postTxHandlers, h)
+		}
 		routeFilters := []FiberFilterHandler{}
 		mt := method.Method()
 
@@ -192,15 +199,16 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 					}) || slices.ContainsFunc(this.getInstanceHandlers(aValue), func(h FiberHandler) bool {
 						return reflect.TypeOf(middleware).Elem() == reflect.TypeOf(h).Elem()
 					}) {
-						routeHandlers = append(routeHandlers, handler)
+						appendMiddleware(middleware, handler)
 					}
 				}
 			}
+
 			for _, middleware := range this.getInstanceHandlers(aValue) {
 				if !slices.ContainsFunc(handlers, func(h FiberHandler) bool {
 					return reflect.TypeOf(middleware).Elem() == reflect.TypeOf(h).Elem()
 				}) {
-					routeHandlers = append(routeHandlers, middleware.Handler())
+					appendMiddleware(middleware, middleware.Handler())
 				}
 			}
 
@@ -209,7 +217,7 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 		} else {
 			for _, middleware := range filteredHandlers {
 				if handler, ok := controllerHandlers[reflect.TypeOf(middleware).Elem()]; ok {
-					routeHandlers = append(routeHandlers, handler)
+					appendMiddleware(middleware, handler)
 				}
 			}
 		}
@@ -250,10 +258,11 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 			}
 		}
 
-		finalHandlers := toAny(routeHandlers)
+		finalHandlers := toAny(preTxHandlers)
 		if txMgr, ok := this.provider.txManager.Get(); ok {
 			finalHandlers = append(finalHandlers, bindTxContextHandler(txMgr))
 		}
+		finalHandlers = append(finalHandlers, toAny(postTxHandlers)...)
 		finalHandlers = append(finalHandlers, handler)
 
 		switch routeMethod {
