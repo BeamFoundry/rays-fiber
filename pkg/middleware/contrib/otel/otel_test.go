@@ -1,6 +1,7 @@
 package otel_test
 
 import (
+	"net/http"
 	"net/http/httptest"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -18,6 +19,7 @@ import (
 	noopmetric "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/propagation"
 	oteltrace "go.opentelemetry.io/otel/trace"
+	nooptrace "go.opentelemetry.io/otel/trace/noop"
 )
 
 type OtelPathFilter struct {
@@ -25,26 +27,28 @@ type OtelPathFilter struct {
 	Otel
 }
 
-var _ OtelNext = &OtelPathFilter{}
-var _ OtelTracerProvider = &OtelPathFilter{}
-var _ OtelMeterProvider = &OtelPathFilter{}
-var _ OtelPropagators = &OtelPathFilter{}
-var _ OtelResponsePropagators = &OtelPathFilter{}
-var _ OtelPublicEndpointFn = &OtelPathFilter{}
-var _ OtelSpanStartOptions = &OtelPathFilter{}
-var _ OtelSpanNameFormatter = &OtelPathFilter{}
-var _ OtelCustomAttributes = &OtelPathFilter{}
-var _ OtelCustomResponseAttributes = &OtelPathFilter{}
-var _ OtelCustomMetricAttributes = &OtelPathFilter{}
-var _ OtelCustomResponseMetricAttributes = &OtelPathFilter{}
-var _ OtelOptions = &OtelPathFilter{}
+var (
+	_ OtelNext                           = &OtelPathFilter{}
+	_ OtelTracerProvider                 = &OtelPathFilter{}
+	_ OtelMeterProvider                  = &OtelPathFilter{}
+	_ OtelPropagators                    = &OtelPathFilter{}
+	_ OtelResponsePropagators            = &OtelPathFilter{}
+	_ OtelPublicEndpointFn               = &OtelPathFilter{}
+	_ OtelSpanStartOptions               = &OtelPathFilter{}
+	_ OtelSpanNameFormatter              = &OtelPathFilter{}
+	_ OtelCustomAttributes               = &OtelPathFilter{}
+	_ OtelCustomResponseAttributes       = &OtelPathFilter{}
+	_ OtelCustomMetricAttributes         = &OtelPathFilter{}
+	_ OtelCustomResponseMetricAttributes = &OtelPathFilter{}
+	_ OtelOptions                        = &OtelPathFilter{}
+)
 
 func (o *OtelPathFilter) OtelNext() func(fiber.Ctx) bool {
 	return func(fiber.Ctx) bool { return false }
 }
 
 func (o *OtelPathFilter) OtelTracerProvider() oteltrace.TracerProvider {
-	return &wrappedTP{TracerProvider: oteltrace.NewNoopTracerProvider()}
+	return &wrappedTP{TracerProvider: nooptrace.NewTracerProvider()}
 }
 
 func (o *OtelPathFilter) OtelMeterProvider() otelmetric.MeterProvider {
@@ -91,9 +95,11 @@ func (o *OtelPathFilter) OtelOptions(options []otel.Option) []otel.Option {
 	return options
 }
 
-type wrappedTP struct{ oteltrace.TracerProvider }
-type wrappedMP struct{ otelmetric.MeterProvider }
-type wrappedProp struct{ propagation.TextMapPropagator }
+type (
+	wrappedTP   struct{ oteltrace.TracerProvider }
+	wrappedMP   struct{ otelmetric.MeterProvider }
+	wrappedProp struct{ propagation.TextMapPropagator }
+)
 
 type testProviderConfig struct {
 	Configuration
@@ -101,7 +107,7 @@ type testProviderConfig struct {
 }
 
 func (this *testProviderConfig) TracerProvider() oteltrace.TracerProvider {
-	return &wrappedTP{TracerProvider: oteltrace.NewNoopTracerProvider()}
+	return &wrappedTP{TracerProvider: nooptrace.NewTracerProvider()}
 }
 
 func (this *testProviderConfig) MeterProvider() otelmetric.MeterProvider {
@@ -137,9 +143,11 @@ var _ = Describe("Otel", func() {
 		app := appProvider.Default()
 		Expect(app).NotTo(BeNil())
 
-		req := httptest.NewRequest("GET", "/testing/hello", nil)
+		req := httptest.NewRequest(http.MethodGet, "/testing/hello", http.NoBody)
 		resp, testErr := app.Test(req)
 		Expect(testErr).NotTo(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(fiber.StatusOK))
+
+		(&Otel{}).PreTxBinding()
 	})
 })

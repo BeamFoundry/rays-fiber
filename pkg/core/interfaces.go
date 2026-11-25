@@ -138,6 +138,15 @@ type FiberHandler interface {
 	Handler() fiber.Handler
 }
 
+// FiberPreTxHandler is an optional marker interface that a [FiberHandler]
+// (such as OpenTelemetry tracing middleware) may implement to indicate that its
+// handler enriches the request context and must run before transaction context
+// binding.
+type FiberPreTxHandler interface {
+	FiberHandler
+	PreTxBinding()
+}
+
 // FiberFilterHandler is the interface describing a middleware that register around a fiber.Handler.
 //
 // NOTE: The Timeout middleware is only [FiberFilterHandler] provided.

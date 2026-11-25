@@ -158,14 +158,14 @@ type OtelOptions interface {
 }
 
 type otelConfigurationProperties struct {
-	withoutMetrics          bool
-	traceResponseHeader     string
-	publicEndpoint          bool
 	port                    *int
-	clientIP                bool
+	traceResponseHeader     string
 	capturedRequestHeaders  []string
 	capturedResponseHeaders []string
 	redactedQueryParams     []string
+	withoutMetrics          bool
+	publicEndpoint          bool
+	clientIP                bool
 }
 
 type otelConfig struct {
@@ -341,3 +341,7 @@ func (this *Otel) PostConstruct(parent any) Error {
 func (this *Otel) Handler() fiber.Handler {
 	return otel.New(this.opts...)
 }
+
+// PreTxBinding implements [github.com/BeamFoundry/rays-fiber/pkg/core.FiberPreTxHandler]
+// so the OpenTelemetry middleware runs before transaction context binding.
+func (this *Otel) PreTxBinding() {}

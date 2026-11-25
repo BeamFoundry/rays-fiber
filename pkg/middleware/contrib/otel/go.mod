@@ -3,7 +3,7 @@ module github.com/BeamFoundry/rays-fiber/pkg/middleware/contrib/otel
 go 1.27
 
 require (
-	github.com/BeamFoundry/rays v0.4.2
+	github.com/BeamFoundry/rays v0.5.0-rc3
 	github.com/BeamFoundry/rays-fiber v0.3.2
 	github.com/gofiber/contrib/v3/otel v1.3.5
 	github.com/gofiber/fiber/v3 v3.7.0
