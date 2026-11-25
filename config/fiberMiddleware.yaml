@@ -102,6 +102,15 @@ rays:
           timeInterval: 500ms
           disableColors: false
           forceColors: false
+        otel:
+          withoutMetrics: false
+          traceResponseHeader: ""
+          publicEndpoint: false
+          port: null
+          clientIP: true
+          capturedRequestHeaders: []
+          capturedResponseHeaders: []
+          redactedQueryParams: []
         paginate:
           pageKey: "page"
           limitKey: "limit"
