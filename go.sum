@@ -2,6 +2,8 @@ github.com/BeamFoundry/rays v0.4.0 h1:7YGO8TMw6jJU1ssIlQd4Nk8QNRQ0WoJSJs0DvZ8ITh
 github.com/BeamFoundry/rays v0.4.0/go.mod h1:t7DZl4+V9yYsWRFHeWlgGDdvMafJjIWHBN0rhkwDnhI=
 github.com/BeamFoundry/rays v0.4.2 h1:Xx1O9/uV30j7RyjywmFClKDRozCtK6DFrEu0FR6qFzc=
 github.com/BeamFoundry/rays v0.4.2/go.mod h1:t7DZl4+V9yYsWRFHeWlgGDdvMafJjIWHBN0rhkwDnhI=
+github.com/BeamFoundry/rays v0.5.0-rc3 h1:C8hXFdhAttcQK/dF0dfY/cqM0IVki7ADWV4DnQqDatw=
+github.com/BeamFoundry/rays v0.5.0-rc3/go.mod h1:TVthNFJp7AcpbfVqyZ1yELaf///Dy3HVrz2l9nHyctU=
 github.com/BeamFoundry/rays-web-security v0.3.0 h1:4Q/97fBt+GQ4fU8X/0EabBSmWOwomCbeUzd1smpWG8E=
 github.com/BeamFoundry/rays-web-security v0.3.0/go.mod h1:owEXQjb45i4VvzxSPinzGy1AVMygAkUgWereBL4rrSM=
 github.com/BeamFoundry/rays-web-security v0.3.1 h1:YGkh0dLy+aCWtAvOqgCzuCFbCAuXTK2EgX/pES2SxNY=
