@@ -30,6 +30,7 @@ type DefaultAppProvider struct {
 	apps                map[string]*fiber.App
 	securityMiddlewares Foundry[*FiberSecurityAppHandler] `@:"Inject"`
 	securityFilterChain Optional[SecurityFilterChain]     `@:"Inject"`
+	txManager           Optional[TransactionManager]      `@:"Inject"`
 	lock                sync.Mutex
 }
 
@@ -112,6 +113,9 @@ func (this *DefaultAppProvider) customize(name string, app *fiber.App) {
 
 	if err := Try(func() {
 		if _, ok := this.httpSecurity[name]; ok {
+			if txMgr, ok := this.txManager.Get(); ok {
+				app.Use(bindTxContextHandler(txMgr))
+			}
 			if chain, ok := this.securityFilterChain.Get(); ok {
 				ctx := context.Background()
 				ctx = context.WithValue(ctx, PrototypeContextProxyType, app)
@@ -125,6 +129,15 @@ func (this *DefaultAppProvider) customize(name string, app *fiber.App) {
 		}
 	}); err != nil {
 		err.Log(slog.LevelWarn)
+	}
+}
+
+func bindTxContextHandler(txMgr TransactionManager) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		prev := txMgr.GetContext()
+		txMgr.SetContext(c.Context())
+		defer txMgr.SetContext(prev)
+		return c.Next()
 	}
 }
 

@@ -251,6 +251,9 @@ func (this *FiberControllerConfig) PostConstruct() Error {
 		}
 
 		finalHandlers := toAny(routeHandlers)
+		if txMgr, ok := this.provider.txManager.Get(); ok {
+			finalHandlers = append(finalHandlers, bindTxContextHandler(txMgr))
+		}
 		finalHandlers = append(finalHandlers, handler)
 
 		switch routeMethod {
