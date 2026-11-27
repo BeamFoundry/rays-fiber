@@ -20,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.identity.outputs.release_created }}
-      release_id: ${{ steps.identity.outputs.release_id }}
       tag_name: ${{ steps.identity.outputs.tag_name }}
       sha: ${{ steps.identity.outputs.sha }}
     steps:
@@ -40,18 +39,13 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           config-file: .github/workflows/release-please-config.json
       - name: Write release identity
-        if: ${{ !cancelled() && steps.release.outputs.release_created == 'true' && steps.release.outputs.id != '' && steps.release.outputs.tag_name != '' && steps.release.outputs.sha != '' }}
+        if: ${{ !cancelled() && steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' && steps.release.outputs.sha != '' }}
         id: write-identity
         env:
-          RELEASE_ID: ${{ steps.release.outputs.id }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
         run: |
           set -euo pipefail
-          if [[ ! "${RELEASE_ID}" =~ ^[0-9]+$ ]]; then
-            echo "Invalid release ID: ${RELEASE_ID}" >&2
-            exit 1
-          fi
           if [[ ! "${TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ || "${TAG_NAME}" == *".."* ]]; then
             echo "Invalid root tag name: ${TAG_NAME}" >&2
             exit 1
@@ -60,43 +54,38 @@ jobs:
             echo "Invalid release commit SHA: ${RELEASE_SHA}" >&2
             exit 1
           fi
-          jq -n --arg release_id "${RELEASE_ID}" --arg tag_name "${TAG_NAME}" --arg sha "${RELEASE_SHA}" \
-            '{release_id: $release_id, tag_name: $tag_name, sha: $sha}' > "${RUNNER_TEMP}/release-identity.json"
+          jq -n --arg tag_name "${TAG_NAME}" --arg sha "${RELEASE_SHA}" \
+            '{tag_name: $tag_name, sha: $sha}' > "${RUNNER_TEMP}/release-identity.json"
       - name: Save release identity
-        if: ${{ !cancelled() && steps.write-identity.outcome == 'success' && steps.release.outputs.release_created == 'true' && steps.release.outputs.id != '' && steps.release.outputs.tag_name != '' && steps.release.outputs.sha != '' }}
+        if: ${{ !cancelled() && steps.write-identity.outcome == 'success' && steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' && steps.release.outputs.sha != '' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/release-identity.json
-          key: release-identity-${{ github.run_id }}
+          key: release-identity-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Restore release identity
         if: ${{ steps.release.outputs.release_created != 'true' && github.run_attempt != '1' }}
         id: restore-identity
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/release-identity.json
-          key: release-identity-${{ github.run_id }}
+          key: release-identity-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            release-identity-${{ github.run_id }}-
       - name: Export release identity
-        if: ${{ steps.release.outputs.release_created == 'true' || steps.restore-identity.outputs.cache-hit == 'true' }}
+        if: ${{ steps.release.outputs.release_created == 'true' || steps.restore-identity.outputs.cache-matched-key != '' }}
         id: identity
         env:
           RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
-          RELEASE_ID: ${{ steps.release.outputs.id }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
         run: |
           set -euo pipefail
           if [ "${RELEASE_CREATED}" != "true" ]; then
-            RELEASE_ID=$(jq -r '.release_id // empty' "${RUNNER_TEMP}/release-identity.json")
             TAG_NAME=$(jq -r '.tag_name // empty' "${RUNNER_TEMP}/release-identity.json")
             RELEASE_SHA=$(jq -r '.sha // empty' "${RUNNER_TEMP}/release-identity.json")
           fi
-          : "${RELEASE_ID:?RELEASE_ID is required}"
           : "${TAG_NAME:?TAG_NAME is required}"
           : "${RELEASE_SHA:?RELEASE_SHA is required}"
-          if [[ ! "${RELEASE_ID}" =~ ^[0-9]+$ ]]; then
-            echo "Invalid release ID: ${RELEASE_ID}" >&2
-            exit 1
-          fi
           if [[ ! "${TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ || "${TAG_NAME}" == *".."* ]]; then
             echo "Invalid root tag name: ${TAG_NAME}" >&2
             exit 1
@@ -107,13 +96,12 @@ jobs:
           fi
           {
             echo "release_created=true"
-            echo "release_id=${RELEASE_ID}"
             echo "tag_name=${TAG_NAME}"
             echo "sha=${RELEASE_SHA}"
           } >> "${GITHUB_OUTPUT}"
 
   tag-submodules:
-    name: Tag Go submodules & publish release
+    name: Tag Go submodules & finalize release
     needs: release-please
     if: >-
       ${{
@@ -184,51 +172,39 @@ jobs:
           done <<< "${submodules}"
 
           echo "tag_name=${TAG_NAME}" >> "${GITHUB_OUTPUT}"
-      - name: Publish GitHub release
+      - name: Finalize pre-1.0.0 release
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           TAG_NAME: ${{ steps.tag-modules.outputs.tag_name }}
-          RELEASE_ID: ${{ needs.release-please.outputs.release_id }}
         run: |
           set -euo pipefail
           : "${TAG_NAME:?TAG_NAME is required}"
 
-          if [ -z "${RELEASE_ID}" ]; then
-            RELEASE_ID=$(gh api --paginate --slurp "repos/${GITHUB_REPOSITORY}/releases" \
-              | jq -r --arg tag "${TAG_NAME}" '[.[][] | select(.tag_name == $tag) | .id][0] // empty')
-            if [ -z "${RELEASE_ID}" ]; then
-              echo "No GitHub release found for ${TAG_NAME}, skipping publish"
+          # Pre-1.0.0 override: Release Please marks all 0.x.y releases as prerelease when
+          # prerelease: true is set. Promote stable 0.x.y tags (^v0\.[0-9]+\.[0-9]+$) to full
+          # releases; this rule automatically deactivates for 1.0.0+ and RC tags.
+          if [[ ! "${TAG_NAME}" =~ ^v0\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Skipping pre-1.0.0 release promotion for ${TAG_NAME}"
+            exit 0
+          fi
+
+          if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME}")
+          else
+            if ! release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME}" 2>/dev/null); then
+              echo "No published GitHub release found for ${TAG_NAME}, skipping"
               exit 0
             fi
           fi
 
-          release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}")
-          is_draft=$(jq -r '.draft' <<< "${release_json}")
+          release_id=$(jq -r '.id' <<< "${release_json}")
           is_prerelease=$(jq -r '.prerelease' <<< "${release_json}")
 
-          # Pre-1.0.0 override: Release Please marks all 0.x.y releases as prerelease when
-          # prerelease: true is set. Publish stable 0.x.y tags (^v0\.[0-9]+\.[0-9]+$) as full
-          # releases; this rule automatically deactivates for 1.0.0+ and RC tags.
-          if [[ "${TAG_NAME}" =~ ^v0\.[0-9]+\.[0-9]+$ ]]; then
-            if [ "${is_draft}" = "true" ] || [ "${is_prerelease}" = "true" ]; then
-              echo "Publishing stable pre-1.0.0 release ${TAG_NAME} (id=${RELEASE_ID}) as full release"
-              gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
-                -F draft=false \
-                -F prerelease=false \
-                -f make_latest=legacy >/dev/null
-            else
-              echo "Release ${TAG_NAME} (id=${RELEASE_ID}) is already published as a full release"
-            fi
-          elif [ "${is_draft}" = "true" ]; then
-            echo "Publishing release ${TAG_NAME} (id=${RELEASE_ID}, prerelease=${is_prerelease})"
-            if [ "${is_prerelease}" = "true" ]; then
-              gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
-                -F draft=false >/dev/null
-            else
-              gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
-                -F draft=false \
-                -f make_latest=legacy >/dev/null
-            fi
+          if [ "${is_prerelease}" = "true" ]; then
+            echo "Promoting stable pre-1.0.0 release ${TAG_NAME} (id=${release_id}) to full release"
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+              -F prerelease=false \
+              -f make_latest=legacy >/dev/null
           else
-            echo "Release ${TAG_NAME} (id=${RELEASE_ID}) is already published"
+            echo "Release ${TAG_NAME} (id=${release_id}) is already a full release"
           fi
