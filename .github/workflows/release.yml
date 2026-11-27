@@ -191,9 +191,19 @@ jobs:
           if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
             release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME}")
           else
-            if ! release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME}" 2>/dev/null); then
-              echo "No published GitHub release found for ${TAG_NAME}, skipping"
-              exit 0
+            err_file="${RUNNER_TEMP}/release-lookup.err"
+            status=0
+            release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME}" 2>"${err_file}") || status=$?
+            if [ "${status}" -ne 0 ]; then
+              if grep -q '(HTTP 404)' "${err_file}"; then
+                echo "No published GitHub release found for ${TAG_NAME}, skipping"
+                exit 0
+              fi
+              cat "${err_file}" >&2
+              if [ -n "${release_json}" ]; then
+                printf '%s\n' "${release_json}" >&2
+              fi
+              exit "${status}"
             fi
           fi
 
