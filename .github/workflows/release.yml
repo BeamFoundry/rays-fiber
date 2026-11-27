@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Existing root release tag to tag submodules for (e.g. v0.4.0-rc.1). Leave empty to use the version in .release-please-manifest.json.'
+        required: false
+        type: string
 
 permissions: {}
 
@@ -22,21 +28,54 @@ jobs:
           permission-issues: write
           permission-pull-requests: write
       - name: Run Release Please
+        if: ${{ github.event_name == 'push' }}
         uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         id: release
         with:
           token: ${{ steps.app-token.outputs.token }}
           config-file: .github/workflows/release-please-config.json
       - name: Tag Go submodules
-        if: ${{ steps.release.outputs.release_created == 'true' }}
+        if: ${{ steps.release.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch' || github.run_attempt != '1' }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          INPUT_TAG_NAME: ${{ inputs.tag_name }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
         run: |
           set -euo pipefail
-          : "${TAG_NAME:?TAG_NAME is required}"
-          : "${RELEASE_SHA:?RELEASE_SHA is required}"
+
+          if [ -z "${TAG_NAME}" ]; then
+            if [ -n "${INPUT_TAG_NAME}" ]; then
+              TAG_NAME="${INPUT_TAG_NAME}"
+            else
+              version=$(gh api -H "Accept: application/vnd.github.raw+json" \
+                "repos/${GITHUB_REPOSITORY}/contents/.release-please-manifest.json?ref=${GITHUB_SHA}" \
+                --jq '.["."] // empty')
+              : "${version:?Could not determine root version from .release-please-manifest.json}"
+              TAG_NAME="v${version#v}"
+            fi
+          fi
+
+          if [[ ! "${TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ || "${TAG_NAME}" == *".."* ]]; then
+            echo "Invalid root tag name: ${TAG_NAME}" >&2
+            exit 1
+          fi
+
+          if [ -z "${RELEASE_SHA}" ]; then
+            ref_json=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${TAG_NAME}")
+            obj_type=$(jq -r '.object.type' <<< "${ref_json}")
+            obj_sha=$(jq -r '.object.sha' <<< "${ref_json}")
+            while [ "${obj_type}" = "tag" ]; do
+              tag_json=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${obj_sha}")
+              obj_type=$(jq -r '.object.type' <<< "${tag_json}")
+              obj_sha=$(jq -r '.object.sha' <<< "${tag_json}")
+            done
+            if [ "${obj_type}" != "commit" ]; then
+              echo "Root tag ${TAG_NAME} does not resolve to a commit (type: ${obj_type})" >&2
+              exit 1
+            fi
+            RELEASE_SHA="${obj_sha}"
+          fi
 
           submodules=$(gh api "repos/${GITHUB_REPOSITORY}/git/trees/${RELEASE_SHA}?recursive=1" \
             --jq '.tree[] | select(.type == "blob" and (.path | endswith("/go.mod")) and (.path | startswith("vendor/") | not)) | .path | rtrimstr("/go.mod")')
