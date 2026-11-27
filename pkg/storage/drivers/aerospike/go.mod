@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	github.com/BeamFoundry/rays v0.4.0
-	github.com/BeamFoundry/rays-fiber v0.4.0-rc.1 // x-release-please-version
+	github.com/BeamFoundry/rays-fiber v0.4.1-rc.1 // x-release-please-version
 	github.com/aerospike/aerospike-client-go/v8 v8.9.0
 	github.com/gofiber/fiber/v3 v3.7.0
 	github.com/gofiber/storage v1.3.3
