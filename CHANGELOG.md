@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1-rc.1](https://github.com/BeamFoundry/rays-fiber/compare/v0.4.0-rc.1...v0.4.1-rc.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* **release:** fix release-please configuration for module tagging ([#25](https://github.com/BeamFoundry/rays-fiber/issues/25)) ([7949372](https://github.com/BeamFoundry/rays-fiber/commit/7949372cf51af622f333cab6978dc0d026fe5350))
+
 ## [0.4.0-rc.1](https://github.com/BeamFoundry/rays-fiber/compare/v0.3.2...v0.4.0-rc.1) (2026-11-25)
 
 

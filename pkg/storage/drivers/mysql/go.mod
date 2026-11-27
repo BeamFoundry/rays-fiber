@@ -4,7 +4,7 @@ go 1.27
 
 require (
 	github.com/BeamFoundry/rays v0.4.0
-	github.com/BeamFoundry/rays-fiber v0.4.0-rc.1 // x-release-please-version
+	github.com/BeamFoundry/rays-fiber v0.4.1-rc.1 // x-release-please-version
 	github.com/gofiber/fiber/v3 v3.7.0
 	github.com/gofiber/storage/mysql/v2 v2.4.4
 	github.com/onsi/ginkgo/v2 v2.34.0
