@@ -61,16 +61,18 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/release-identity.json
-          key: release-identity-${{ github.run_id }}
+          key: release-identity-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Restore release identity
         if: ${{ steps.release.outputs.release_created != 'true' && github.run_attempt != '1' }}
         id: restore-identity
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/release-identity.json
-          key: release-identity-${{ github.run_id }}
+          key: release-identity-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            release-identity-${{ github.run_id }}-
       - name: Export release identity
-        if: ${{ steps.release.outputs.release_created == 'true' || steps.restore-identity.outputs.cache-hit == 'true' }}
+        if: ${{ steps.release.outputs.release_created == 'true' || steps.restore-identity.outputs.cache-matched-key != '' }}
         id: identity
         env:
           RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
@@ -99,7 +101,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
   tag-submodules:
-    name: Tag Go submodules
+    name: Tag Go submodules & finalize release
     needs: release-please
     if: >-
       ${{
@@ -118,6 +120,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write
       - name: Tag Go submodules
+        id: tag-modules
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           INPUT_TAG_NAME: ${{ inputs.tag_name }}
@@ -167,3 +170,51 @@ jobs:
               -f "ref=refs/tags/${tag}" \
               -f "sha=${RELEASE_SHA}" >/dev/null
           done <<< "${submodules}"
+
+          echo "tag_name=${TAG_NAME}" >> "${GITHUB_OUTPUT}"
+      - name: Finalize pre-1.0.0 release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG_NAME: ${{ steps.tag-modules.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          : "${TAG_NAME:?TAG_NAME is required}"
+
+          # Pre-1.0.0 override: Release Please marks all 0.x.y releases as prerelease when
+          # prerelease: true is set. Promote stable 0.x.y tags (^v0\.[0-9]+\.[0-9]+$) to full
+          # releases; this rule automatically deactivates for 1.0.0+ and RC tags.
+          if [[ ! "${TAG_NAME}" =~ ^v0\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Skipping pre-1.0.0 release promotion for ${TAG_NAME}"
+            exit 0
+          fi
+
+          if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME}")
+          else
+            err_file="${RUNNER_TEMP}/release-lookup.err"
+            status=0
+            release_json=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG_NAME}" 2>"${err_file}") || status=$?
+            if [ "${status}" -ne 0 ]; then
+              if grep -q '(HTTP 404)' "${err_file}"; then
+                echo "No published GitHub release found for ${TAG_NAME}, skipping"
+                exit 0
+              fi
+              cat "${err_file}" >&2
+              if [ -n "${release_json}" ]; then
+                printf '%s\n' "${release_json}" >&2
+              fi
+              exit "${status}"
+            fi
+          fi
+
+          release_id=$(jq -r '.id' <<< "${release_json}")
+          is_prerelease=$(jq -r '.prerelease' <<< "${release_json}")
+
+          if [ "${is_prerelease}" = "true" ]; then
+            echo "Promoting stable pre-1.0.0 release ${TAG_NAME} (id=${release_id}) to full release"
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+              -F prerelease=false \
+              -f make_latest=legacy >/dev/null
+          else
+            echo "Release ${TAG_NAME} (id=${release_id}) is already a full release"
+          fi
