@@ -39,18 +39,25 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           config-file: .github/workflows/release-please-config.json
       - name: Write release identity
-        if: ${{ steps.release.outputs.release_created == 'true' }}
+        if: ${{ !cancelled() && steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' && steps.release.outputs.sha != '' }}
+        id: write-identity
         env:
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
         run: |
           set -euo pipefail
-          : "${TAG_NAME:?TAG_NAME is required}"
-          : "${RELEASE_SHA:?RELEASE_SHA is required}"
+          if [[ ! "${TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ || "${TAG_NAME}" == *".."* ]]; then
+            echo "Invalid root tag name: ${TAG_NAME}" >&2
+            exit 1
+          fi
+          if [[ ! "${RELEASE_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid release commit SHA: ${RELEASE_SHA}" >&2
+            exit 1
+          fi
           jq -n --arg tag_name "${TAG_NAME}" --arg sha "${RELEASE_SHA}" \
             '{tag_name: $tag_name, sha: $sha}' > "${RUNNER_TEMP}/release-identity.json"
       - name: Save release identity
-        if: ${{ steps.release.outputs.release_created == 'true' }}
+        if: ${{ !cancelled() && steps.write-identity.outcome == 'success' && steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' && steps.release.outputs.sha != '' }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/release-identity.json
